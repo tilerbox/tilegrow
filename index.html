@@ -7,123 +7,106 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); 
-            overflow: hidden; 
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         #viewport { 
             width: 100vw; 
-            height: 100vh; 
-            overflow: hidden; 
-            position: relative; 
-            cursor: grab; 
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
         }
         #viewport:active { cursor: grabbing; }
         #map-container { 
-            position: absolute; 
-            transform-origin: center center; 
-            will-change: transform;
-        }
-        
-        .hex-grid {
-            position: relative;
-            width: 2000px;
-            height: 2000px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: center center;
         }
         
         .hex-tile {
             position: absolute;
-            width: 120px;
-            height: 138px;
+            width: 100px;
+            height: 115.47px; /* 100 * sqrt(3)/sqrt(3) for pointy hex */
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+            transition: transform 0.2s, filter 0.2s;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+            margin-left: -50px;
+            margin-top: -57.74px;
         }
         
         .hex-tile:hover {
-            transform: scale(1.15);
-            filter: drop-shadow(0 8px 20px rgba(99, 102, 241, 0.6));
+            transform: scale(1.12);
+            filter: drop-shadow(0 8px 20px rgba(255,255,255,0.3));
             z-index: 1000;
         }
         
         .hex-tile.center-tile {
-            filter: drop-shadow(0 0 30px rgba(251, 191, 36, 0.8));
-            animation: pulse-center 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 25px rgba(251, 191, 36, 0.7));
+            z-index: 100;
         }
         
-        .hex-tile.center-tile:hover {
-            filter: drop-shadow(0 0 40px rgba(251, 191, 36, 1));
+        .hex-tile.center-tile .hex-content {
+            animation: pulse 2s ease-in-out infinite;
         }
         
-        @keyframes pulse-center {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+        @keyframes pulse {
+            0%, 100% { box-shadow: inset 0 0 20px rgba(255,255,255,0.3); }
+            50% { box-shadow: inset 0 0 30px rgba(255,255,255,0.5); }
         }
         
         .hex-shape {
             width: 100%;
             height: 100%;
+            background: var(--tile-bg, linear-gradient(135deg, #667eea, #764ba2));
             clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            overflow: hidden;
-            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        
-        .hex-bg {
-            position: absolute;
-            inset: 0;
-            background-size: cover;
-            background-position: center;
-            opacity: 0.9;
-        }
-        
-        .hex-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(0,0,0,0.2), rgba(0,0,0,0.5));
+            position: relative;
+            overflow: hidden;
         }
         
         .hex-content {
-            position: relative;
-            z-index: 10;
             text-align: center;
             color: white;
+            z-index: 2;
         }
         
         .hex-avatar {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.25);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            font-weight: bold;
-            margin: 0 auto 5px;
-            border: 2px solid rgba(255,255,255,0.3);
+            font-size: 22px;
+            margin: 0 auto 4px;
+            backdrop-filter: blur(4px);
+            border: 2px solid rgba(255,255,255,0.4);
         }
         
         .hex-name {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             text-transform: lowercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
         
         .hex-label {
             position: absolute;
-            bottom: 8px;
+            bottom: 12px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0,0,0,0.85);
             color: #fff;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 500;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 9px;
             white-space: nowrap;
             opacity: 0;
             transition: opacity 0.2s;
@@ -135,50 +118,14 @@
             opacity: 1;
         }
         
-        /* Controls and other styles same as before */
-        #controls {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 12px;
-            z-index: 1000;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .btn {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #fff;
-            padding: 14px 28px;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            backdrop-filter: blur(20px);
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        
-        .btn:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateY(-3px);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            border: none;
-        }
-        
+        /* UI Controls */
         #header {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             padding: 20px 30px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
             z-index: 1000;
             display: flex;
             justify-content: space-between;
@@ -186,81 +133,97 @@
         }
         
         #header h1 {
-            font-size: 24px;
-            background: linear-gradient(135deg, #fff, #a5b4fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 22px;
+            color: #fff;
             margin: 0;
         }
         
         #header .subtitle {
-            font-size: 12px;
+            font-size: 11px;
             color: rgba(255,255,255,0.6);
-            margin-top: 4px;
         }
         
         .instagram-link {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
             color: #fff;
             text-decoration: none;
-            background: linear-gradient(135deg, #833ab4, #fd1d1d, #f77737);
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-size: 14px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
             font-weight: 500;
-            transition: transform 0.2s;
         }
         
-        .instagram-link:hover {
-            transform: scale(1.05);
+        #controls {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .btn {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 13px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
         }
         
         #search-container {
             position: fixed;
-            top: 100px;
+            top: 90px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
-            width: 90%;
-            max-width: 400px;
+            width: 300px;
         }
         
         #search-input {
             width: 100%;
-            padding: 15px 25px;
-            border-radius: 30px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(20px);
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: none;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
             color: #fff;
-            font-size: 16px;
+            font-size: 14px;
             outline: none;
-            transition: all 0.2s;
-        }
-        
-        #search-input::placeholder {
-            color: rgba(255,255,255,0.5);
         }
         
         #search-results {
             position: absolute;
-            top: 60px;
+            top: 50px;
             left: 0;
             right: 0;
             background: rgba(0,0,0,0.9);
-            border-radius: 15px;
-            max-height: 300px;
+            border-radius: 12px;
+            max-height: 250px;
             overflow-y: auto;
             display: none;
         }
         
         .search-result-item {
-            padding: 12px 20px;
+            padding: 10px 15px;
             cursor: pointer;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            transition: background 0.2s;
+            color: #fff;
+            font-size: 13px;
         }
         
         .search-result-item:hover {
@@ -269,82 +232,62 @@
         
         #info-panel {
             position: fixed;
-            bottom: 100px;
-            left: 30px;
-            max-width: 300px;
+            bottom: 90px;
+            left: 20px;
+            width: 260px;
             background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(20px);
-            padding: 20px;
-            border-radius: 15px;
+            backdrop-filter: blur(15px);
+            padding: 18px;
+            border-radius: 16px;
             color: #fff;
             z-index: 1000;
         }
         
         #info-panel h3 {
-            margin-bottom: 10px;
-            font-size: 16px;
+            font-size: 14px;
+            margin-bottom: 8px;
             color: #a5b4fc;
         }
         
-        #info-panel p {
-            font-size: 13px;
-            line-height: 1.6;
+        #info-panel p, #info-panel li {
+            font-size: 12px;
+            line-height: 1.5;
             color: rgba(255,255,255,0.8);
         }
         
-        #info-panel .steps {
-            margin-top: 15px;
-            padding-left: 20px;
+        #info-panel ol {
+            padding-left: 18px;
+            margin-top: 10px;
         }
         
-        #info-panel .steps li {
-            margin-bottom: 8px;
-            font-size: 12px;
-        }
-        
-        @media (max-width: 768px) {
-            #header { padding: 15px 20px; }
-            #header h1 { font-size: 18px; }
-            .instagram-link { padding: 8px 15px; font-size: 12px; }
-            #search-container { top: 80px; width: 85%; }
-            #info-panel { display: none; }
-            .hex-tile { width: 90px; height: 104px; }
-            .btn { padding: 10px 18px; font-size: 12px; }
+        #info-panel li {
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <!-- Yandex.Metrika counter -->
-    <script type="text/javascript">
-        (function(m,e,t,r,i,k,a){
-            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-            m[i].l=1*new Date();
-            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=107200174', 'ym');
-        ym(107200174, 'init', {clickmap:true, trackLinks:true, accurateTrackBounce:true, webvisor:true});
+    <script>
+        // Yandex Metrika
+        (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0];k.async=1;k.src=r;a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js','ym');ym(107200174,'init',{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:true});
     </script>
-    <noscript><div><img src="https://mc.yandex.ru/watch/107200174" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 
     <div id="header">
         <div>
             <h1>🍯 TileGrow</h1>
-            <div class="subtitle">Interactive Subscriber Map</div>
+            <div class="subtitle">Find your place in the hive</div>
         </div>
-        <a href="https://www.instagram.com/tilegrow" target="_blank" class="instagram-link">
-            <span>📷</span> @tilegrow
-        </a>
+        <a href="https://instagram.com/tilegrow" target="_blank" class="instagram-link">📷 @tilegrow</a>
     </div>
 
     <div id="search-container">
-        <input type="text" id="search-input" placeholder="🔍 Find your tile..." autocomplete="off">
+        <input type="text" id="search-input" placeholder="Find your tile...">
         <div id="search-results"></div>
     </div>
 
     <div id="info-panel">
         <h3>🎯 How to get your tile</h3>
         <p>Join our community and become part of the growing hive!</p>
-        <ol class="steps">
+        <ol>
             <li>Follow <strong>@tilegrow</strong> on Instagram</li>
             <li>Like & comment on our posts</li>
             <li>Get featured on the map!</li>
@@ -352,55 +295,59 @@
     </div>
 
     <div id="viewport">
-        <div id="map-container">
-            <div id="hex-grid" class="hex-grid"></div>
-        </div>
+        <div id="map-container"></div>
     </div>
 
     <div id="controls">
-        <button class="btn" onclick="centerOnTile('tilegrow')">⌖ Center</button>
+        <button class="btn" onclick="centerOnTile(0)">⌖ Center</button>
         <button class="btn btn-primary" onclick="startTour()">🎬 Tour</button>
-        <button class="btn" onclick="resetZoom()">🔍 Reset</button>
+        <button class="btn" onclick="resetView()">⟲ Reset</button>
     </div>
 
     <script>
-        // Proper hexagon honeycomb geometry
-        const HEX_RADIUS = 60; // Distance from center to corner
-        const HEX_WIDTH = HEX_RADIUS * 2; // 120px
-        const HEX_HEIGHT = Math.sqrt(3) * HEX_RADIUS; // ~104px vertical
-        const HORIZONTAL_SPACING = HEX_RADIUS * 1.5; // Horizontal distance between centers
-        const VERTICAL_SPACING = HEX_HEIGHT; // Vertical distance
-        
-        // Subscribers with unique styles
-        const tileStyles = [
-            { name: 'tilegrow', ig: 'tilegrow', center: true, bg: 'radial-gradient(circle, #fbbf24 0%, #f59e0b 50%, #d97706 100%)', emoji: '👑' },
-            { name: 'alex', ig: 'alex.design', bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', emoji: '🎨' },
-            { name: 'maria', ig: 'maria.art', bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', emoji: '🌸' },
-            { name: 'john', ig: 'john.photo', bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', emoji: '📸' },
-            { name: 'anna', ig: 'anna.style', bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', emoji: '✨' },
-            { name: 'david', ig: 'david.creates', bg: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', emoji: '🔥' },
-            { name: 'emma', ig: 'emma.visuals', bg: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)', emoji: '🎭' },
-            { name: 'james', ig: 'james.studio', bg: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', emoji: '🎬' },
-            { name: 'sophia', ig: 'sophia.art', bg: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', emoji: '🦋' },
-            { name: 'robert', ig: 'robert.design', bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', emoji: '🎯' },
-            { name: 'olivia', ig: 'olivia.creates', bg: 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)', emoji: '💎' },
-            { name: 'michael', ig: 'michael.visual', bg: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)', emoji: '⚡' },
-            { name: 'isabella', ig: 'isabella.art', bg: 'linear-gradient(135deg, #c1dfc4 0%, #deecdd 100%)', emoji: '🌿' },
-            { name: 'william', ig: 'william.studio', bg: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)', emoji: '🎪' },
-            { name: 'ava', ig: 'ava.design', bg: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)', emoji: '🔮' },
-            { name: 'richard', ig: 'richard.photo', bg: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', emoji: '📷' },
-            { name: 'mia', ig: 'mia.creates', bg: 'linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%)', emoji: '🌺' },
-            { name: 'joseph', ig: 'joseph.art', bg: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)', emoji: '🌊' },
-            { name: 'charlotte', ig: 'charlotte.style', bg: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', emoji: '☁️' },
-            { name: 'thomas', ig: 'thomas.visual', bg: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)', emoji: '🎨' },
-            { name: 'amelia', ig: 'amelia.design', bg: 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)', emoji: '🦋' }
+        // Hexagon math - pointy-top hexagons
+        const HEX_SIZE = 50; // radius (center to corner)
+        const HEX_WIDTH = HEX_SIZE * 2;
+        const HEX_HEIGHT = Math.sqrt(3) * HEX_SIZE;
+        const HEX_HORIZ = HEX_SIZE * 1.5; // horizontal distance between centers
+        const HEX_VERT = HEX_HEIGHT; // vertical distance
+
+        // Tile data with unique gradients
+        const tiles = [
+            { name: 'tilegrow', ig: 'tilegrow', center: true, bg: 'linear-gradient(135deg, #fbbf24, #f59e0b)', icon: '👑' },
+            { name: 'alex', ig: 'alex.design', bg: 'linear-gradient(135deg, #667eea, #764ba2)', icon: '🎨' },
+            { name: 'maria', ig: 'maria.art', bg: 'linear-gradient(135deg, #f093fb, #f5576c)', icon: '🌸' },
+            { name: 'john', ig: 'john.photo', bg: 'linear-gradient(135deg, #4facfe, #00f2fe)', icon: '📸' },
+            { name: 'anna', ig: 'anna.style', bg: 'linear-gradient(135deg, #43e97b, #38f9d7)', icon: '✨' },
+            { name: 'david', ig: 'david.creates', bg: 'linear-gradient(135deg, #fa709a, #fee140)', icon: '🔥' },
+            { name: 'emma', ig: 'emma.visuals', bg: 'linear-gradient(135deg, #30cfd0, #330867)', icon: '🎭' },
+            { name: 'james', ig: 'james.studio', bg: 'linear-gradient(135deg, #a8edea, #fed6e3)', icon: '🎬' },
+            { name: 'sophia', ig: 'sophia.art', bg: 'linear-gradient(135deg, #ff9a9e, #fecfef)', icon: '🦋' },
+            { name: 'robert', ig: 'robert.design', bg: 'linear-gradient(135deg, #667eea, #764ba2)', icon: '🎯' },
+            { name: 'olivia', ig: 'olivia.creates', bg: 'linear-gradient(135deg, #89f7fe, #66a6ff)', icon: '💎' },
+            { name: 'michael', ig: 'michael.visual', bg: 'linear-gradient(135deg, #f7971e, #ffd200)', icon: '⚡' },
+            { name: 'isabella', ig: 'isabella.art', bg: 'linear-gradient(135deg, #c1dfc4, #deecdd)', icon: '🌿' },
+            { name: 'william', ig: 'william.studio', bg: 'linear-gradient(135deg, #ffecd2, #fcb69f)', icon: '🎪' },
+            { name: 'ava', ig: 'ava.design', bg: 'linear-gradient(135deg, #e0c3fc, #8ec5fc)', icon: '🔮' },
+            { name: 'richard', ig: 'richard.photo', bg: 'linear-gradient(135deg, #a18cd1, #fbc2eb)', icon: '📷' },
+            { name: 'mia', ig: 'mia.creates', bg: 'linear-gradient(135deg, #fad0c4, #ffd1ff)', icon: '🌺' },
+            { name: 'joseph', ig: 'joseph.art', bg: 'linear-gradient(135deg, #84fab0, #8fd3f4)', icon: '🌊' },
+            { name: 'charlotte', ig: 'charlotte.style', bg: 'linear-gradient(135deg, #a1c4fd, #c2e9fb)', icon: '☁️' },
+            { name: 'thomas', ig: 'thomas.visual', bg: 'linear-gradient(135deg, #ffecd2, #fcb69f)', icon: '🎨' },
+            { name: 'amelia', ig: 'amelia.design', bg: 'linear-gradient(135deg, #fbc2eb, #a6c1ee)', icon: '🦋' }
         ];
 
-        // Generate hex positions in proper honeycomb layout
-        function getHexPosition(index) {
+        // Convert axial coordinates to pixel coordinates for pointy-top hexes
+        function hexToPixel(q, r) {
+            const x = HEX_SIZE * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
+            const y = HEX_SIZE * (3/2 * r);
+            return { x, y };
+        }
+
+        // Get ring and position in ring for spiral layout
+        function getSpiralPosition(index) {
             if (index === 0) return { q: 0, r: 0 };
             
-            // Ring-based spiral
             let ring = 1;
             let count = 1;
             while (count + ring * 6 <= index) {
@@ -413,20 +360,20 @@
             const side = Math.floor(posInRing / sideLength);
             const posOnSide = posInRing % sideLength;
             
-            // Start from top and go clockwise
-            let q = 0, r = -ring;
-            
-            // Directions for each side (clockwise from top)
+            // Directions for each side (counter-clockwise from top-right)
             const directions = [
-                { dq: 1, dr: 0 },   // down-right
-                { dq: 0, dr: 1 },   // down
-                { dq: -1, dr: 1 },  // down-left
-                { dq: -1, dr: 0 },  // up-left
-                { dq: 0, dr: -1 },  // up
-                { dq: 1, dr: -1 }   // up-right
+                { dq: 1, dr: -1 },  // top-right
+                { dq: 1, dr: 0 },   // right
+                { dq: 0, dr: 1 },   // bottom-right
+                { dq: -1, dr: 1 },  // bottom-left
+                { dq: -1, dr: 0 },  // left
+                { dq: 0, dr: -1 }   // top-left
             ];
             
-            // Move to start of current side
+            // Start from top of ring
+            let q = 0, r = -ring;
+            
+            // Move along sides
             for (let s = 0; s < side; s++) {
                 for (let i = 0; i < sideLength; i++) {
                     q += directions[s].dq;
@@ -434,7 +381,6 @@
                 }
             }
             
-            // Move along current side
             for (let i = 0; i < posOnSide; i++) {
                 q += directions[side].dq;
                 r += directions[side].dr;
@@ -443,110 +389,98 @@
             return { q, r };
         }
 
-        // Convert axial coordinates to pixel coordinates
-        function hexToPixel(q, r) {
-            const x = HEX_RADIUS * 1.5 * q;
-            const y = HEX_HEIGHT * (r + q * 0.5);
-            return { x: x + 800, y: y + 600 }; // Center offset
-        }
+        // Create tiles
+        const container = document.getElementById('map-container');
+        const tileElements = [];
 
-        // Create hex grid
-        const grid = document.getElementById('hex-grid');
-        const tileElements = {};
-        let isDragging = false;
-        let dragStarted = false;
-        const dragThreshold = 5;
-        let dragStartX = 0, dragStartY = 0;
-
-        tileStyles.forEach((style, index) => {
-            const pos = getHexPosition(index);
+        tiles.forEach((tile, index) => {
+            const pos = getSpiralPosition(index);
             const pixel = hexToPixel(pos.q, pos.r);
-
-            const tile = document.createElement('div');
-            tile.className = 'hex-tile' + (style.center ? ' center-tile' : '');
-            tile.style.left = (pixel.x - HEX_WIDTH/2) + 'px';
-            tile.style.top = (pixel.y - HEX_HEIGHT/2) + 'px';
-            tile.style.width = HEX_WIDTH + 'px';
-            tile.style.height = (HEX_HEIGHT * 1.15) + 'px'; // Slightly taller for pointy hex
-            tile.dataset.name = style.name;
-            tile.dataset.ig = style.ig;
-
-            tile.innerHTML = `
-                <div class="hex-shape" style="background: ${style.bg};">
+            
+            const el = document.createElement('div');
+            el.className = 'hex-tile' + (tile.center ? ' center-tile' : '');
+            el.style.left = pixel.x + 'px';
+            el.style.top = pixel.y + 'px';
+            el.style.setProperty('--tile-bg', tile.bg);
+            el.innerHTML = `
+                <div class="hex-shape">
                     <div class="hex-content">
-                        <div class="hex-avatar" style="background: rgba(255,255,255,0.25);">
-                            ${style.emoji}
-                        </div>
-                        <div class="hex-name">${style.name}</div>
+                        <div class="hex-avatar">${tile.icon}</div>
+                        <div class="hex-name">${tile.name}</div>
                     </div>
                 </div>
-                <span class="hex-label">@${style.ig}</span>
+                <span class="hex-label">@${tile.ig}</span>
             `;
-
-            // Drag vs click detection
-            tile.addEventListener('mousedown', (e) => {
-                dragStarted = false;
-                dragStartX = e.clientX;
-                dragStartY = e.clientY;
+            
+            // Click handling with drag detection
+            let isDraggingTile = false;
+            let startX, startY;
+            
+            el.addEventListener('mousedown', (e) => {
+                isDraggingTile = false;
+                startX = e.clientX;
+                startY = e.clientY;
             });
-
-            tile.addEventListener('click', (e) => {
-                if (!dragStarted) {
-                    window.open(`https://instagram.com/${style.ig}`, '_blank');
+            
+            el.addEventListener('mousemove', (e) => {
+                if (Math.abs(e.clientX - startX) > 3 || Math.abs(e.clientY - startY) > 3) {
+                    isDraggingTile = true;
                 }
             });
-
-            grid.appendChild(tile);
-            tileElements[style.name] = tile;
+            
+            el.addEventListener('click', (e) => {
+                if (!isDraggingTile) {
+                    window.open(`https://instagram.com/${tile.ig}`, '_blank');
+                }
+            });
+            
+            container.appendChild(el);
+            tileElements.push(el);
         });
 
-        // Pan & Zoom
+        // Pan and zoom
         let scale = 1;
         let translateX = 0, translateY = 0;
-        let lastX = 0, lastY = 0;
+        let isDragging = false;
+        let startDragX, startDragY;
 
-        const container = document.getElementById('map-container');
         const viewport = document.getElementById('viewport');
 
         function updateTransform() {
-            container.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+            container.style.transform = `translate(calc(-50% + ${translateX}px), calc(-50% + ${translateY}px)) scale(${scale})`;
         }
 
-        function centerOnTile(name) {
-            const tile = tileElements[name];
-            if (!tile) return;
-            
-            const rect = tile.getBoundingClientRect();
-            const viewportRect = viewport.getBoundingClientRect();
-            
-            translateX = (viewportRect.width / 2) - (rect.left + rect.width / 2 - translateX);
-            translateY = (viewportRect.height / 2) - (rect.top + rect.height / 2 - translateY);
-            scale = 1.3;
+        function centerOnTile(index) {
+            const tile = tiles[index];
+            const pos = getSpiralPosition(index);
+            const pixel = hexToPixel(pos.q, pos.r);
+            translateX = -pixel.x;
+            translateY = -pixel.y;
+            scale = 1.5;
             updateTransform();
         }
 
         function startTour() {
-            centerOnTile('tilegrow');
-            let currentScale = 1.3;
-            const targetScale = 0.7;
-            const duration = 8000; // 8 seconds
-            const startTime = performance.now();
+            centerOnTile(0);
+            const startScale = 1.5;
+            const endScale = 0.6;
+            const duration = 6000;
+            const startTime = Date.now();
             
-            function animate(now) {
-                const elapsed = now - startTime;
+            function animate() {
+                const elapsed = Date.now() - startTime;
                 const progress = Math.min(elapsed / duration, 1);
-                currentScale = 1.3 - (0.6 * progress);
-                scale = currentScale;
+                scale = startScale - (startScale - endScale) * progress;
                 updateTransform();
                 
                 if (progress < 1) {
                     requestAnimationFrame(animate);
                 }
             }
-            requestAnimationFrame(animate);
+            animate();
         }
 
-        function resetZoom() {
+        function resetView() {
             scale = 1;
             translateX = 0;
             translateY = 0;
@@ -554,30 +488,17 @@
         }
 
         // Mouse events
-        viewport.addEventListener('mousedown', e => {
+        viewport.addEventListener('mousedown', (e) => {
             isDragging = true;
-            dragStarted = false;
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
-            lastX = e.clientX;
-            lastY = e.clientY;
+            startDragX = e.clientX - translateX;
+            startDragY = e.clientY - translateY;
             viewport.style.cursor = 'grabbing';
         });
 
-        viewport.addEventListener('mousemove', e => {
+        viewport.addEventListener('mousemove', (e) => {
             if (isDragging) {
-                const dx = e.clientX - lastX;
-                const dy = e.clientY - lastY;
-                
-                if (Math.abs(e.clientX - dragStartX) > dragThreshold || 
-                    Math.abs(e.clientY - dragStartY) > dragThreshold) {
-                    dragStarted = true;
-                }
-                
-                translateX += dx;
-                translateY += dy;
-                lastX = e.clientX;
-                lastY = e.clientY;
+                translateX = e.clientX - startDragX;
+                translateY = e.clientY - startDragY;
                 updateTransform();
             }
         });
@@ -587,7 +508,7 @@
             viewport.style.cursor = 'grab';
         });
 
-        viewport.addEventListener('wheel', e => {
+        viewport.addEventListener('wheel', (e) => {
             e.preventDefault();
             const delta = e.deltaY > 0 ? 0.9 : 1.1;
             scale = Math.max(0.3, Math.min(4, scale * delta));
@@ -595,31 +516,18 @@
         });
 
         // Touch events
-        viewport.addEventListener('touchstart', e => {
+        viewport.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
                 isDragging = true;
-                dragStarted = false;
-                dragStartX = e.touches[0].clientX;
-                dragStartY = e.touches[0].clientY;
-                lastX = e.touches[0].clientX;
-                lastY = e.touches[0].clientY;
+                startDragX = e.touches[0].clientX - translateX;
+                startDragY = e.touches[0].clientY - translateY;
             }
         }, { passive: false });
 
-        viewport.addEventListener('touchmove', e => {
-            if (e.touches.length === 1 && isDragging) {
-                const dx = e.touches[0].clientX - lastX;
-                const dy = e.touches[0].clientY - lastY;
-                
-                if (Math.abs(e.touches[0].clientX - dragStartX) > dragThreshold || 
-                    Math.abs(e.touches[0].clientY - dragStartY) > dragThreshold) {
-                    dragStarted = true;
-                }
-                
-                translateX += dx;
-                translateY += dy;
-                lastX = e.touches[0].clientX;
-                lastY = e.touches[0].clientY;
+        viewport.addEventListener('touchmove', (e) => {
+            if (isDragging && e.touches.length === 1) {
+                translateX = e.touches[0].clientX - startDragX;
+                translateY = e.touches[0].clientY - startDragY;
                 updateTransform();
                 e.preventDefault();
             }
@@ -629,46 +537,45 @@
             isDragging = false;
         });
 
-        // Search
+        // Search functionality
         const searchInput = document.getElementById('search-input');
         const searchResults = document.getElementById('search-results');
 
-        searchInput.addEventListener('input', e => {
+        searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
             if (query.length < 2) {
                 searchResults.style.display = 'none';
                 return;
             }
 
-            const matches = tileStyles.filter(s => 
-                s.name.toLowerCase().includes(query) || 
-                s.ig.toLowerCase().includes(query)
+            const matches = tiles.map((t, i) => ({ ...t, index: i })).filter(t => 
+                t.name.toLowerCase().includes(query) || t.ig.toLowerCase().includes(query)
             );
 
-            searchResults.innerHTML = matches.map(s => `
-                <div class="search-result-item" data-name="${s.name}">@${s.ig}</div>
+            searchResults.innerHTML = matches.map(t => `
+                <div class="search-result-item" data-index="${t.index}">@${t.ig}</div>
             `).join('');
 
             searchResults.style.display = matches.length ? 'block' : 'none';
 
             document.querySelectorAll('.search-result-item').forEach(item => {
                 item.addEventListener('click', () => {
-                    centerOnTile(item.dataset.name);
+                    centerOnTile(parseInt(item.dataset.index));
                     searchResults.style.display = 'none';
                     searchInput.value = '';
                 });
             });
         });
 
-        document.addEventListener('click', e => {
+        document.addEventListener('click', (e) => {
             if (!e.target.closest('#search-container')) {
                 searchResults.style.display = 'none';
             }
         });
 
-        // Init
+        // Initialize
         updateTransform();
-        setTimeout(() => centerOnTile('tilegrow'), 100);
+        centerOnTile(0);
     </script>
 </body>
 </html>
