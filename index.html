@@ -344,7 +344,7 @@
             return { x, y };
         }
 
-        // Get ring and position in ring for spiral layout
+        // Get ring and position in ring for spiral layout - clockwise from top
         function getSpiralPosition(index) {
             if (index === 0) return { q: 0, r: 0 };
             
@@ -356,31 +356,33 @@
             }
             
             const posInRing = index - count;
-            const sideLength = ring;
-            const side = Math.floor(posInRing / sideLength);
-            const posOnSide = posInRing % sideLength;
             
-            // Directions for each side (counter-clockwise from top-right)
+            // Start at top of ring (q=0, r=-ring) and go clockwise
+            // Directions for pointy-top hexes going clockwise: top-right, bottom-right, bottom, bottom-left, top-left, top
             const directions = [
-                { dq: 1, dr: -1 },  // top-right
-                { dq: 1, dr: 0 },   // right
-                { dq: 0, dr: 1 },   // bottom-right
-                { dq: -1, dr: 1 },  // bottom-left
-                { dq: -1, dr: 0 },  // left
-                { dq: 0, dr: -1 }   // top-left
+                { dq: 1, dr: -1 },   // top-right (1 o'clock)
+                { dq: 1, dr: 0 },    // bottom-right (3 o'clock)
+                { dq: 0, dr: 1 },    // bottom (5 o'clock)
+                { dq: -1, dr: 1 },   // bottom-left (7 o'clock)
+                { dq: -1, dr: 0 },   // top-left (9 o'clock)
+                { dq: 0, dr: -1 }    // top (11 o'clock)
             ];
             
-            // Start from top of ring
-            let q = 0, r = -ring;
+            // Calculate position: which side and how far along
+            const side = Math.floor(posInRing / ring);
+            const posOnSide = posInRing % ring;
             
-            // Move along sides
+            // Start from top
+            let q = 0;
+            let r = -ring;
+            
+            // Move to correct side
             for (let s = 0; s < side; s++) {
-                for (let i = 0; i < sideLength; i++) {
-                    q += directions[s].dq;
-                    r += directions[s].dr;
-                }
+                q += directions[s].dq * ring;
+                r += directions[s].dr * ring;
             }
             
+            // Move along current side
             for (let i = 0; i < posOnSide; i++) {
                 q += directions[side].dq;
                 r += directions[side].dr;
