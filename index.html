@@ -7,7 +7,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); 
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); 
             overflow: hidden; 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
@@ -22,39 +22,42 @@
         #map-container { 
             position: absolute; 
             transform-origin: center center; 
-            transition: transform 0.1s ease-out; 
+            will-change: transform;
         }
         
-        /* Hexagon grid */
         .hex-grid {
             position: relative;
-            width: 100%;
-            height: 100%;
+            width: 2000px;
+            height: 2000px;
         }
         
         .hex-tile {
             position: absolute;
-            width: 140px;
-            height: 160px;
+            width: 120px;
+            height: 138px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
         }
         
         .hex-tile:hover {
-            transform: scale(1.1);
-            filter: drop-shadow(0 8px 20px rgba(99, 102, 241, 0.5));
-            z-index: 100;
+            transform: scale(1.15);
+            filter: drop-shadow(0 8px 20px rgba(99, 102, 241, 0.6));
+            z-index: 1000;
         }
         
         .hex-tile.center-tile {
-            filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.6));
-            animation: pulse-gold 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(251, 191, 36, 0.8));
+            animation: pulse-center 2s ease-in-out infinite;
         }
         
-        @keyframes pulse-gold {
-            0%, 100% { filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.6)); }
-            50% { filter: drop-shadow(0 0 30px rgba(251, 191, 36, 0.9)); }
+        .hex-tile.center-tile:hover {
+            filter: drop-shadow(0 0 40px rgba(251, 191, 36, 1));
+        }
+        
+        @keyframes pulse-center {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
         
         .hex-shape {
@@ -63,31 +66,69 @@
             clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
             overflow: hidden;
             position: relative;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
-        .hex-shape img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
+        .hex-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.9;
+        }
+        
+        .hex-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0,0,0,0.2), rgba(0,0,0,0.5));
+        }
+        
+        .hex-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            color: white;
+        }
+        
+        .hex-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 5px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .hex-name {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: lowercase;
+            letter-spacing: 0.5px;
         }
         
         .hex-label {
             position: absolute;
-            bottom: 15px;
+            bottom: 8px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             color: #fff;
             padding: 4px 10px;
             border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
+            font-size: 10px;
+            font-weight: 500;
             white-space: nowrap;
             opacity: 0;
             transition: opacity 0.2s;
             pointer-events: none;
+            z-index: 1001;
         }
         
         .hex-tile:hover .hex-label {
@@ -299,8 +340,8 @@
             }
             
             .hex-tile {
-                width: 100px;
-                height: 115px;
+                width: 90px;
+                height: 104px;
             }
             
             .btn {
@@ -368,42 +409,69 @@
     </div>
 
     <script>
-        // Hexagon geometry
-        const HEX_WIDTH = 140;
-        const HEX_HEIGHT = 160;
-        const HEX_HORIZ = HEX_WIDTH * 0.75;
-        const HEX_VERT = HEX_HEIGHT * 0.5;
+        // Hexagon geometry - tighter packing
+        const HEX_WIDTH = 100;
+        const HEX_HEIGHT = 115;
+        const HEX_HORIZ = HEX_WIDTH * 0.866; // cos(30°)
+        const HEX_VERT = HEX_HEIGHT * 0.75;
 
         // Subscribers data - spiral order from center
         const subscribers = [
-            { name: 'tilegrow', ig: 'tilegrow', center: true, color: '#fbbf24' },
-            { name: 'alex', ig: 'alex.design' },
-            { name: 'maria', ig: 'maria.art' },
-            { name: 'john', ig: 'john.photo' },
-            { name: 'anna', ig: 'anna.style' },
-            { name: 'david', ig: 'david.creates' },
-            { name: 'emma', ig: 'emma.visuals' },
-            { name: 'james', ig: 'james.studio' },
-            { name: 'sophia', ig: 'sophia.art' },
-            { name: 'robert', ig: 'robert.design' },
-            { name: 'olivia', ig: 'olivia.creates' },
-            { name: 'michael', ig: 'michael.visual' },
-            { name: 'isabella', ig: 'isabella.art' },
-            { name: 'william', ig: 'william.studio' },
-            { name: 'ava', ig: 'ava.design' },
-            { name: 'richard', ig: 'richard.photo' },
-            { name: 'mia', ig: 'mia.creates' },
-            { name: 'joseph', ig: 'joseph.art' },
-            { name: 'charlotte', ig: 'charlotte.style' },
-            { name: 'thomas', ig: 'thomas.visual' },
-            { name: 'amelia', ig: 'amelia.design' }
+            { name: 'tilegrow', ig: 'tilegrow', center: true, color: '#fbbf24', pattern: 'radial' },
+            { name: 'alex', ig: 'alex.design', color: '#667eea', pattern: 'diagonal' },
+            { name: 'maria', ig: 'maria.art', color: '#f093fb', pattern: 'dots' },
+            { name: 'john', ig: 'john.photo', color: '#4facfe', pattern: 'waves' },
+            { name: 'anna', ig: 'anna.style', color: '#43e97b', pattern: 'grid' },
+            { name: 'david', ig: 'david.creates', color: '#fa709a', pattern: 'zigzag' },
+            { name: 'emma', ig: 'emma.visuals', color: '#30cfd0', pattern: 'circles' },
+            { name: 'james', ig: 'james.studio', color: '#a8edea', pattern: 'lines' },
+            { name: 'sophia', ig: 'sophia.art', color: '#fed6e3', pattern: 'stars' },
+            { name: 'robert', ig: 'robert.design', color: '#d299c2', pattern: 'hex' },
+            { name: 'olivia', ig: 'olivia.creates', color: '#89f7fe', pattern: 'triangles' },
+            { name: 'michael', ig: 'michael.visual', color: '#f5f7fa', pattern: 'cross' },
+            { name: 'isabella', ig: 'isabella.art', color: '#c1dfc4', pattern: 'diamond' },
+            { name: 'william', ig: 'william.studio', color: '#deecdd', pattern: 'spiral' },
+            { name: 'ava', ig: 'ava.design', color: '#e0c3fc', pattern: 'waves2' },
+            { name: 'richard', ig: 'richard.photo', color: '#8ec5fc', pattern: 'dots2' },
+            { name: 'mia', ig: 'mia.creates', color: '#ffecd2', pattern: 'sun' },
+            { name: 'joseph', ig: 'joseph.art', color: '#fcb69f', pattern: 'moon' },
+            { name: 'charlotte', ig: 'charlotte.style', color: '#a1c4fd', pattern: 'cloud' },
+            { name: 'thomas', ig: 'thomas.visual', color: '#c2e9fb', pattern: 'rain' },
+            { name: 'amelia', ig: 'amelia.design', color: '#fbc2eb', pattern: 'snow' }
         ];
+
+        // Generate unique SVG patterns for each tile
+        function generatePattern(pattern, color) {
+            const patterns = {
+                radial: `<radialGradient id="g"><stop offset="0%" stop-color="${color}"/><stop offset="100%" stop-color="${color}44"/></radialGradient><rect fill="url(#g)" width="100" height="100"/>`,
+                diagonal: `<pattern id="p" patternUnits="userSpaceOnUse" width="20" height="20"><path d="M0,20 L20,0" stroke="${color}" stroke-width="2" opacity="0.3"/></pattern><rect fill="${color}" width="100" height="100"/><rect fill="url(#p)" width="100" height="100"/>`,
+                dots: `<rect fill="${color}" width="100" height="100"/><circle cx="25" cy="25" r="8" fill="white" opacity="0.3"/><circle cx="75" cy="25" r="8" fill="white" opacity="0.3"/><circle cx="50" cy="50" r="8" fill="white" opacity="0.3"/><circle cx="25" cy="75" r="8" fill="white" opacity="0.3"/><circle cx="75" cy="75" r="8" fill="white" opacity="0.3"/>`,
+                waves: `<rect fill="${color}" width="100" height="100"/><path d="M0,30 Q25,10 50,30 T100,30" stroke="white" stroke-width="3" fill="none" opacity="0.3"/><path d="M0,60 Q25,40 50,60 T100,60" stroke="white" stroke-width="3" fill="none" opacity="0.3"/><path d="M0,90 Q25,70 50,90 T100,90" stroke="white" stroke-width="3" fill="none" opacity="0.3"/>`,
+                grid: `<rect fill="${color}" width="100" height="100"/><path d="M33,0 L33,100 M66,0 L66,100 M0,33 L100,33 M0,66 L100,66" stroke="white" stroke-width="2" opacity="0.2"/>`,
+                zigzag: `<rect fill="${color}" width="100" height="100"/><path d="M0,20 L20,0 L40,20 L60,0 L80,20 L100,0" stroke="white" stroke-width="3" fill="none" opacity="0.3"/><path d="M0,50 L20,30 L40,50 L60,30 L80,50 L100,30" stroke="white" stroke-width="3" fill="none" opacity="0.3"/><path d="M0,80 L20,60 L40,80 L60,60 L80,80 L100,60" stroke="white" stroke-width="3" fill="none" opacity="0.3"/>`,
+                circles: `<rect fill="${color}" width="100" height="100"/><circle cx="50" cy="50" r="30" stroke="white" stroke-width="3" fill="none" opacity="0.3"/><circle cx="50" cy="50" r="15" fill="white" opacity="0.3"/>`,
+                lines: `<rect fill="${color}" width="100" height="100"/><line x1="0" y1="20" x2="100" y2="20" stroke="white" stroke-width="2" opacity="0.3"/><line x1="0" y1="40" x2="100" y2="40" stroke="white" stroke-width="2" opacity="0.3"/><line x1="0" y1="60" x2="100" y2="60" stroke="white" stroke-width="2" opacity="0.3"/><line x1="0" y1="80" x2="100" y2="80" stroke="white" stroke-width="2" opacity="0.3"/>`,
+                stars: `<rect fill="${color}" width="100" height="100"/><text x="20" y="30" font-size="20" fill="white" opacity="0.4">★</text><text x="60" y="50" font-size="20" fill="white" opacity="0.4">★</text><text x="30" y="80" font-size="20" fill="white" opacity="0.4">★</text><text x="70" y="90" font-size="20" fill="white" opacity="0.4">★</text>`,
+                hex: `<rect fill="${color}" width="100" height="100"/><path d="M50,15 L85,32.5 L85,67.5 L50,85 L15,67.5 L15,32.5 Z" stroke="white" stroke-width="2" fill="none" opacity="0.3"/>`,
+                triangles: `<rect fill="${color}" width="100" height="100"/><path d="M50,15 L85,75 L15,75 Z" stroke="white" stroke-width="2" fill="none" opacity="0.3"/><path d="M50,85 L15,25 L85,25 Z" stroke="white" stroke-width="2" fill="none" opacity="0.3"/>`,
+                cross: `<rect fill="${color}" width="100" height="100"/><path d="M50,15 L50,85 M15,50 L85,50" stroke="white" stroke-width="4" opacity="0.3"/>`,
+                diamond: `<rect fill="${color}" width="100" height="100"/><path d="M50,10 L90,50 L50,90 L10,50 Z" stroke="white" stroke-width="2" fill="none" opacity="0.3"/>`,
+                spiral: `<rect fill="${color}" width="100" height="100"/><path d="M50,50 m-40,0 a40,40 0 1,0 80,0 a40,40 0 1,0 -80,0 M50,50 m-25,0 a25,25 0 1,0 50,0 a25,25 0 1,0 -50,0 M50,50 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0" stroke="white" stroke-width="2" fill="none" opacity="0.3"/>`,
+                waves2: `<rect fill="${color}" width="100" height="100"/><path d="M0,25 Q12.5,15 25,25 T50,25 T75,25 T100,25" stroke="white" stroke-width="2" fill="none" opacity="0.3"/><path d="M0,50 Q12.5,40 25,50 T50,50 T75,50 T100,50" stroke="white" stroke-width="2" fill="none" opacity="0.3"/><path d="M0,75 Q12.5,65 25,75 T50,75 T75,75 T100,75" stroke="white" stroke-width="2" fill="none" opacity="0.3"/>`,
+                dots2: `<rect fill="${color}" width="100" height="100"/><circle cx="20" cy="20" r="5" fill="white" opacity="0.4"/><circle cx="50" cy="20" r="5" fill="white" opacity="0.4"/><circle cx="80" cy="20" r="5" fill="white" opacity="0.4"/><circle cx="35" cy="50" r="5" fill="white" opacity="0.4"/><circle cx="65" cy="50" r="5" fill="white" opacity="0.4"/><circle cx="20" cy="80" r="5" fill="white" opacity="0.4"/><circle cx="50" cy="80" r="5" fill="white" opacity="0.4"/><circle cx="80" cy="80" r="5" fill="white" opacity="0.4"/>`,
+                sun: `<rect fill="${color}" width="100" height="100"/><circle cx="50" cy="50" r="20" fill="#fbbf24" opacity="0.8"/><line x1="50" y1="10" x2="50" y2="25" stroke="#fbbf24" stroke-width="3" opacity="0.6"/><line x1="50" y1="75" x2="50" y2="90" stroke="#fbbf24" stroke-width="3" opacity="0.6"/><line x1="10" y1="50" x2="25" y2="50" stroke="#fbbf24" stroke-width="3" opacity="0.6"/><line x1="75" y1="50" x2="90" y2="50" stroke="#fbbf24" stroke-width="3" opacity="0.6"/>`,
+                moon: `<rect fill="${color}" width="100" height="100"/><path d="M35,20 A30,30 0 1,1 35,80 A20,20 0 1,0 35,20" fill="#e0e7ff" opacity="0.8"/>`,
+                cloud: `<rect fill="${color}" width="100" height="100"/><ellipse cx="35" cy="55" rx="20" ry="15" fill="white" opacity="0.7"/><ellipse cx="55" cy="50" rx="25" ry="18" fill="white" opacity="0.7"/><ellipse cx="75" cy="55" rx="20" ry="15" fill="white" opacity="0.7"/>`,
+                rain: `<rect fill="${color}" width="100" height="100"/><line x1="30" y1="40" x2="25" y2="60" stroke="#60a5fa" stroke-width="2" opacity="0.6"/><line x1="50" y1="35" x2="45" y2="55" stroke="#60a5fa" stroke-width="2" opacity="0.6"/><line x1="70" y1="40" x2="65" y2="60" stroke="#60a5fa" stroke-width="2" opacity="0.6"/>`,
+                snow: `<rect fill="${color}" width="100" height="100"/><text x="30" y="40" font-size="20" fill="white" opacity="0.8">❄</text><text x="55" y="60" font-size="20" fill="white" opacity="0.8">❄</text><text x="40" y="80" font-size="20" fill="white" opacity="0.8">❄</text>`
+            };
+            return patterns[pattern] || patterns.radial;
+        }
 
         // Calculate hex positions in spiral
         function getHexPosition(index) {
             if (index === 0) return { x: 0, y: 0 };
             
-            // Hex spiral algorithm
             let ring = 1;
             let count = 1;
             while (count + ring * 6 <= index) {
@@ -415,7 +483,6 @@
             const side = Math.floor(posInRing / ring);
             const posOnSide = posInRing % ring;
             
-            // Hex directions
             const directions = [
                 { x: 1, y: -1 }, { x: 1, y: 0 }, { x: 0, y: 1 },
                 { x: -1, y: 1 }, { x: -1, y: 0 }, { x: 0, y: -1 }
@@ -435,11 +502,16 @@
         // Create hex grid
         const grid = document.getElementById('hex-grid');
         const tileElements = {};
+        let isDragging = false;
+        let dragStarted = false;
+        let dragThreshold = 5;
+        let dragStartX = 0;
+        let dragStartY = 0;
 
         subscribers.forEach((sub, index) => {
             const pos = getHexPosition(index);
-            const x = pos.x * HEX_HORIZ + 400;
-            const y = pos.y * HEX_VERT + (pos.x % 2) * (HEX_VERT) + 300;
+            const x = pos.x * HEX_HORIZ + 500;
+            const y = pos.y * HEX_VERT + (Math.abs(pos.x) % 2) * (HEX_VERT * 0.5) + 400;
 
             const tile = document.createElement('div');
             tile.className = 'hex-tile' + (sub.center ? ' center-tile' : '');
@@ -449,19 +521,35 @@
             tile.dataset.ig = sub.ig;
             tile.dataset.index = index;
 
-            const color = sub.color || `hsl(${index * 30 + 200}, 70%, 60%)`;
+            const patternSvg = generatePattern(sub.pattern, sub.color);
             
             tile.innerHTML = `
-                <div class="hex-shape" style="background: linear-gradient(135deg, ${color}, ${color}dd);">
-                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;">
-                        ${sub.name[0].toUpperCase()}
+                <div class="hex-shape" style="background: ${sub.color};">
+                    <svg class="hex-bg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        ${patternSvg}
+                    </svg>
+                    <div class="hex-overlay"></div>
+                    <div class="hex-content">
+                        <div class="hex-avatar" style="background: ${sub.center ? '#fbbf24' : 'rgba(255,255,255,0.2)'};">
+                            ${sub.name[0].toUpperCase()}
+                        </div>
+                        <div class="hex-name">${sub.name}</div>
                     </div>
                 </div>
                 <span class="hex-label">@${sub.ig}</span>
             `;
 
-            tile.addEventListener('click', () => {
-                window.open(`https://instagram.com/${sub.ig}`, '_blank');
+            // Click handler with drag detection
+            tile.addEventListener('mousedown', (e) => {
+                dragStarted = false;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+            });
+
+            tile.addEventListener('click', (e) => {
+                if (!dragStarted) {
+                    window.open(`https://instagram.com/${sub.ig}`, '_blank');
+                }
             });
 
             grid.appendChild(tile);
@@ -472,7 +560,6 @@
         let scale = 1;
         let translateX = 0;
         let translateY = 0;
-        let isDragging = false;
         let lastX = 0;
         let lastY = 0;
 
@@ -497,17 +584,26 @@
         }
 
         function startTour() {
-            const tourSequence = ['tilegrow', 'alex', 'maria', 'john', 'anna', 'david'];
-            let i = 0;
+            // Start zoomed in on center
+            centerOnTile('tilegrow');
             
-            function next() {
-                if (i < tourSequence.length) {
-                    centerOnTile(tourSequence[i]);
-                    i++;
-                    setTimeout(next, 2000);
+            // Then slowly zoom out to show all
+            let currentScale = 1.5;
+            const targetScale = 0.6;
+            const steps = 120; // 2 seconds at 60fps
+            const stepSize = (currentScale - targetScale) / steps;
+            
+            let step = 0;
+            function animate() {
+                if (step < steps) {
+                    currentScale -= stepSize;
+                    scale = currentScale;
+                    updateTransform();
+                    step++;
+                    requestAnimationFrame(animate);
                 }
             }
-            next();
+            animate();
         }
 
         function resetZoom() {
@@ -517,9 +613,12 @@
             updateTransform();
         }
 
-        // Event listeners
+        // Event listeners with drag detection
         viewport.addEventListener('mousedown', e => {
             isDragging = true;
+            dragStarted = false;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
             lastX = e.clientX;
             lastY = e.clientY;
             viewport.style.cursor = 'grabbing';
@@ -527,8 +626,17 @@
 
         viewport.addEventListener('mousemove', e => {
             if (isDragging) {
-                translateX += e.clientX - lastX;
-                translateY += e.clientY - lastY;
+                const dx = e.clientX - lastX;
+                const dy = e.clientY - lastY;
+                
+                // Check if moved beyond threshold
+                if (Math.abs(e.clientX - dragStartX) > dragThreshold || 
+                    Math.abs(e.clientY - dragStartY) > dragThreshold) {
+                    dragStarted = true;
+                }
+                
+                translateX += dx;
+                translateY += dy;
                 lastX = e.clientX;
                 lastY = e.clientY;
                 updateTransform();
@@ -551,6 +659,9 @@
         viewport.addEventListener('touchstart', e => {
             if (e.touches.length === 1) {
                 isDragging = true;
+                dragStarted = false;
+                dragStartX = e.touches[0].clientX;
+                dragStartY = e.touches[0].clientY;
                 lastX = e.touches[0].clientX;
                 lastY = e.touches[0].clientY;
             }
@@ -558,8 +669,16 @@
 
         viewport.addEventListener('touchmove', e => {
             if (e.touches.length === 1 && isDragging) {
-                translateX += e.touches[0].clientX - lastX;
-                translateY += e.touches[0].clientY - lastY;
+                const dx = e.touches[0].clientX - lastX;
+                const dy = e.touches[0].clientY - lastY;
+                
+                if (Math.abs(e.touches[0].clientX - dragStartX) > dragThreshold || 
+                    Math.abs(e.touches[0].clientY - dragStartY) > dragThreshold) {
+                    dragStarted = true;
+                }
+                
+                translateX += dx;
+                translateY += dy;
                 lastX = e.touches[0].clientX;
                 lastY = e.touches[0].clientY;
                 updateTransform();
@@ -604,9 +723,20 @@
             });
         });
 
+        // Close search on click outside
+        document.addEventListener('click', e => {
+            if (!e.target.closest('#search-container')) {
+                searchResults.style.display = 'none';
+            }
+        });
+
         // Initialize
         updateTransform();
-        centerOnTile('tilegrow');
+        
+        // Auto-center on load
+        setTimeout(() => {
+            centerOnTile('tilegrow');
+        }, 100);
     </script>
 </body>
 </html>
