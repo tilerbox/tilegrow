@@ -3,581 +3,793 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TileGrow - Hex Map</title>
+    <title>TileGrow - Interactive Map</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            overflow: hidden;
+            background: #0a0a15; 
+            overflow: hidden; 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
+        
+        /* Background Canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
         #viewport { 
             width: 100vw; 
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
-            cursor: grab;
+            height: 100vh; 
+            overflow: hidden; 
+            position: relative; 
+            cursor: grab; 
+            z-index: 1;
         }
         #viewport:active { cursor: grabbing; }
         #map-container { 
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform-origin: center center;
+            position: absolute; 
+            transform-origin: center center; 
+            transition: transform 0.08s ease-out; 
         }
         
-        .hex-tile {
-            position: absolute;
-            width: 100px;
-            height: 115.47px; /* 100 * sqrt(3)/sqrt(3) for pointy hex */
-            cursor: pointer;
-            transition: transform 0.2s, filter 0.2s;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
-            margin-left: -50px;
-            margin-top: -57.74px;
-        }
-        
-        .hex-tile:hover {
-            transform: scale(1.12);
-            filter: drop-shadow(0 8px 20px rgba(255,255,255,0.3));
-            z-index: 1000;
-        }
-        
-        .hex-tile.center-tile {
-            filter: drop-shadow(0 0 25px rgba(251, 191, 36, 0.7));
-            z-index: 100;
-        }
-        
-        .hex-tile.center-tile .hex-content {
-            animation: pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { box-shadow: inset 0 0 20px rgba(255,255,255,0.3); }
-            50% { box-shadow: inset 0 0 30px rgba(255,255,255,0.5); }
-        }
-        
-        .hex-shape {
-            width: 100%;
-            height: 100%;
-            background: var(--tile-bg, linear-gradient(135deg, #667eea, #764ba2));
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* Orbital Layout Styles */
+        .orbital-container {
             position: relative;
-            overflow: hidden;
+            width: 1200px;
+            height: 1200px;
         }
         
-        .hex-content {
-            text-align: center;
-            color: white;
-            z-index: 2;
-        }
-        
-        .hex-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            margin: 0 auto 4px;
-            backdrop-filter: blur(4px);
-            border: 2px solid rgba(255,255,255,0.4);
-        }
-        
-        .hex-name {
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: lowercase;
-            letter-spacing: 0.3px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        }
-        
-        .hex-label {
+        .center-tile {
             position: absolute;
-            bottom: 12px;
             left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.85);
-            color: #fff;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 9px;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        
+        .orbit-ring {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        
+        .orbit-tile {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+        
+        .tile { 
+            width: 140px; 
+            height: 140px; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5); 
+            transition: all 0.3s ease; 
+            cursor: pointer;
+            background: #1a1a2e;
+        }
+        
+        .tile:hover { 
+            transform: scale(1.15); 
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6); 
+            z-index: 100; 
+        }
+        
+        .center-tile .tile {
+            width: 200px;
+            height: 200px;
+            box-shadow: 0 12px 48px rgba(99, 102, 241, 0.4);
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        .tile img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            display: block; 
+        }
+        
+        .tile-label { 
+            position: absolute; 
+            bottom: 10px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: rgba(0,0,0,0.8); 
+            color: #fff; 
+            padding: 6px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            opacity: 0; 
+            transition: opacity 0.2s, transform 0.2s; 
             white-space: nowrap;
-            opacity: 0;
-            transition: opacity 0.2s;
-            pointer-events: none;
-            z-index: 1001;
         }
         
-        .hex-tile:hover .hex-label {
-            opacity: 1;
+        .tile:hover .tile-label { 
+            opacity: 1; 
+            transform: translateX(-50%) translateY(-5px); 
         }
         
-        /* UI Controls */
+        @keyframes glow { 
+            0%, 100% { box-shadow: 0 12px 48px rgba(99, 102, 241, 0.4); } 
+            50% { box-shadow: 0 12px 48px rgba(99, 102, 241, 0.8); } 
+        }
+        
+        /* Header */
         #header {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            padding: 20px 30px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+            height: 70px;
+            background: rgba(10, 10, 21, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
             z-index: 1000;
+        }
+        
+        #logo {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        
+        #search-bar {
+            position: relative;
+            flex: 0 1 400px;
+            max-width: 400px;
+        }
+        
+        #search-input {
+            width: 100%;
+            height: 42px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 21px;
+            padding: 0 42px 0 20px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        #search-input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+        
+        #search-input:focus {
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+        
+        #search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+            font-size: 14px;
+            pointer-events: none;
+        }
+        
+        #instagram-link {
+            color: #fff;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        
+        #instagram-link:hover {
+            opacity: 1;
+        }
+        
+        /* Stats */
+        #stats { 
+            position: fixed; 
+            top: 90px; 
+            right: 30px; 
+            color: #fff; 
+            text-align: right; 
+            z-index: 1000; 
+        }
+        #stats .number { 
+            font-size: 36px; 
+            font-weight: 700; 
+            background: linear-gradient(135deg, #6366f1, #8b5cf6); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        #stats .label { 
+            font-size: 12px; 
+            opacity: 0.6; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+        
+        /* Accordion */
+        #how-to-accordion {
+            position: fixed;
+            top: 90px;
+            left: 30px;
+            width: 280px;
+            z-index: 1000;
+        }
+        
+        .accordion-header {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
-        #header h1 {
-            font-size: 22px;
-            color: #fff;
-            margin: 0;
+        .accordion-header:hover {
+            background: rgba(255,255,255,0.15);
         }
         
-        #header .subtitle {
-            font-size: 11px;
-            color: rgba(255,255,255,0.6);
-        }
-        
-        .instagram-link {
-            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-            color: #fff;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
-        }
-        
-        #controls {
-            position: fixed;
-            bottom: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            z-index: 1000;
-        }
-        
-        .btn {
-            background: rgba(255,255,255,0.12);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #fff;
-            padding: 12px 24px;
-            border-radius: 25px;
-            font-size: 13px;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            transition: all 0.2s;
-        }
-        
-        .btn:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateY(-2px);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            border: none;
-        }
-        
-        #search-container {
-            position: fixed;
-            top: 90px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            width: 300px;
-        }
-        
-        #search-input {
-            width: 100%;
-            padding: 12px 20px;
-            border-radius: 25px;
-            border: none;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px);
-            color: #fff;
-            font-size: 14px;
-            outline: none;
-        }
-        
-        #search-results {
-            position: absolute;
-            top: 50px;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.9);
-            border-radius: 12px;
-            max-height: 250px;
-            overflow-y: auto;
-            display: none;
-        }
-        
-        .search-result-item {
-            padding: 10px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            color: #fff;
-            font-size: 13px;
-        }
-        
-        .search-result-item:hover {
+        .accordion-header.active {
+            border-radius: 12px 12px 0 0;
             background: rgba(99, 102, 241, 0.3);
         }
         
-        #info-panel {
-            position: fixed;
-            bottom: 90px;
-            left: 20px;
-            width: 260px;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(15px);
-            padding: 18px;
-            border-radius: 16px;
-            color: #fff;
-            z-index: 1000;
+        .accordion-icon {
+            transition: transform 0.3s ease;
         }
         
-        #info-panel h3 {
-            font-size: 14px;
-            margin-bottom: 8px;
-            color: #a5b4fc;
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg);
         }
         
-        #info-panel p, #info-panel li {
-            font-size: 12px;
-            line-height: 1.5;
+        .accordion-content {
+            background: rgba(20,20,35,0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+        
+        .accordion-content.open {
+            max-height: 200px;
+            padding: 20px;
+        }
+        
+        .accordion-content p {
             color: rgba(255,255,255,0.8);
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 12px;
         }
         
-        #info-panel ol {
-            padding-left: 18px;
-            margin-top: 10px;
+        .accordion-content a {
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 600;
         }
         
-        #info-panel li {
-            margin-bottom: 5px;
+        .accordion-content a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Controls */
+        #controls { 
+            position: fixed; 
+            bottom: 30px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            display: flex; 
+            gap: 12px; 
+            z-index: 1000; 
+            padding: 0 20px; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+        }
+        
+        .btn { 
+            background: rgba(255,255,255,0.1); 
+            border: 1px solid rgba(255,255,255,0.2); 
+            color: #fff; 
+            padding: 14px 28px; 
+            border-radius: 30px; 
+            font-size: 14px; 
+            font-weight: 500; 
+            cursor: pointer; 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px); 
+            transition: all 0.2s; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+        }
+        
+        .btn:hover { 
+            background: rgba(255,255,255,0.2); 
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4); 
+        }
+        
+        .btn-primary { 
+            background: linear-gradient(135deg, #6366f1, #8b5cf6); 
+            border: none; 
+        }
+        
+        .btn-primary:hover { 
+            background: linear-gradient(135deg, #5558e0, #7c4de0); 
+        }
+        
+        /* Background Selector */
+        #bg-selector {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            z-index: 1000;
+            background: rgba(20,20,35,0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 16px;
+            backdrop-filter: blur(20px);
+        }
+        
+        #bg-selector h3{
+            color: #fff;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            opacity: 0.8;
+        }
+        
+        .bg-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .bg-option {
+            background: rgba(255,255,255,0.05);
+            border: 2px solid transparent;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        
+        .bg-option:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .bg-option.active {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.2);
+        }
+        
+        .record-hint { 
+            position: fixed; 
+            bottom: 100px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: rgba(99, 102, 241, 0.9); 
+            color: #fff; 
+            padding: 10px 20px; 
+            border-radius: 25px; 
+            font-size: 13px; 
+            opacity: 0; 
+            transition: opacity 0.5s; 
+            pointer-events: none; 
+            z-index: 999;
+        }
+        
+        .record-hint.show { 
+            opacity: 1; 
         }
     </style>
 </head>
 <body>
-    <script>
-        // Yandex Metrika
-        (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0];k.async=1;k.src=r;a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js','ym');ym(107200174,'init',{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:true});
-    </script>
-
+    <canvas id="bg-canvas"></canvas>
+    
+    <!-- Header -->
     <div id="header">
-        <div>
-            <h1>🍯 TileGrow</h1>
-            <div class="subtitle">Find your place in the hive</div>
+        <div id="logo">TileGrow</div>
+        <div id="search-bar">
+            <input type="text" id="search-input" placeholder="Search tiles..." onkeyup="searchTiles(this.value)">
+            <span id="search-icon">🔍</span>
         </div>
-        <a href="https://instagram.com/tilegrow" target="_blank" class="instagram-link">📷 @tilegrow</a>
+        <a href="https://instagram.com/tilegrow" target="_blank" id="instagram-link" title="@tilegrow on Instagram">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+            </svg>
+        </a>
     </div>
-
-    <div id="search-container">
-        <input type="text" id="search-input" placeholder="Find your tile...">
-        <div id="search-results"></div>
+    
+    <div id="stats">
+        <div class="number" id="tile-count">20</div>
+        <div class="label">Tiles</div>
     </div>
-
-    <div id="info-panel">
-        <h3>🎯 How to get your tile</h3>
-        <p>Join our community and become part of the growing hive!</p>
-        <ol>
-            <li>Follow <strong>@tilegrow</strong> on Instagram</li>
-            <li>Like & comment on our posts</li>
-            <li>Get featured on the map!</li>
-        </ol>
+    
+    <div id="how-to-accordion">
+        <div class="accordion-header" onclick="toggleAccordion()">
+            <span>📱 How to get your tile</span>
+            <span class="accordion-icon">▼</span>
+        </div>
+        <div class="accordion-content" id="accordion-content">
+            <p>1. Follow <a href="https://instagram.com/tilegrow" target="_blank">@tilegrow</a> on Instagram</p>
+            <p>2. Send us a DM with your name</p>
+            <p>3. We'll generate your unique tile and add you to the map!</p>
+        </div>
     </div>
-
+    
+    <div class="record-hint" id="record-hint">📱 Record screen for Reels</div>
+    
     <div id="viewport">
-        <div id="map-container"></div>
+        <div id="map-container">
+            <div class="orbital-container" id="orbital-container">
+                <!-- Center tile -->
+                <div class="center-tile" id="center-tile"></div>
+                
+                <!-- Orbit rings -->
+                <div class="orbit-ring" style="width: 300px; height: 300px;"></div>
+                <div class="orbit-ring" style="width: 500px; height: 500px;"></div>
+                <div class="orbit-ring" style="width: 700px; height: 700px;"></div>
+                
+                <!-- Subscriber tiles container -->
+                <div id="orbit-tiles"></div>
+            </div>
+        </div>
     </div>
-
+    
     <div id="controls">
-        <button class="btn" onclick="centerOnTile(0)">⌖ Center</button>
-        <button class="btn btn-primary" onclick="startTour()">🎬 Tour</button>
-        <button class="btn" onclick="resetView()">⟲ Reset</button>
+        <button class="btn" onclick="center()">⌖ Center</button>
+        <button class="btn btn-primary" onclick="animateZoomOut()">🔍 Reel Zoom</button>
+        <button class="btn" onclick="autoTour()">🎬 Tour</button>
+        <button class="btn" onclick="toggleLabels()">🏷️ Names</button>
+    </div>
+    
+    <div id="bg-selector">
+        <h3>Background Style</h3>
+        <div class="bg-options">
+            <div class="bg-option active" onclick="setBackground('waves')" data-bg="waves">
+                🌊 Gradient Waves
+            </div>
+            <div class="bg-option" onclick="setBackground('particles')" data-bg="particles">
+                ✨ Connected Particles
+            </div>
+            <div class="bg-option" onclick="setBackground('morphing')" data-bg="morphing">
+                🌀 Morphing Geometry
+            </div>
+        </div>
     </div>
 
     <script>
-        // Hexagon math - pointy-top hexagons
-        const HEX_SIZE = 50; // radius (center to corner)
-        const HEX_WIDTH = HEX_SIZE * 2;
-        const HEX_HEIGHT = Math.sqrt(3) * HEX_SIZE;
-        const HEX_HORIZ = HEX_SIZE * 1.5; // horizontal distance between centers
-        const HEX_VERT = HEX_HEIGHT; // vertical distance
-
-        // Tile data with unique gradients
+        // Sample tile data
         const tiles = [
-            { name: 'tilegrow', ig: 'tilegrow', center: true, bg: 'linear-gradient(135deg, #fbbf24, #f59e0b)', icon: '👑' },
-            { name: 'alex', ig: 'alex.design', bg: 'linear-gradient(135deg, #667eea, #764ba2)', icon: '🎨' },
-            { name: 'maria', ig: 'maria.art', bg: 'linear-gradient(135deg, #f093fb, #f5576c)', icon: '🌸' },
-            { name: 'john', ig: 'john.photo', bg: 'linear-gradient(135deg, #4facfe, #00f2fe)', icon: '📸' },
-            { name: 'anna', ig: 'anna.style', bg: 'linear-gradient(135deg, #43e97b, #38f9d7)', icon: '✨' },
-            { name: 'david', ig: 'david.creates', bg: 'linear-gradient(135deg, #fa709a, #fee140)', icon: '🔥' },
-            { name: 'emma', ig: 'emma.visuals', bg: 'linear-gradient(135deg, #30cfd0, #330867)', icon: '🎭' },
-            { name: 'james', ig: 'james.studio', bg: 'linear-gradient(135deg, #a8edea, #fed6e3)', icon: '🎬' },
-            { name: 'sophia', ig: 'sophia.art', bg: 'linear-gradient(135deg, #ff9a9e, #fecfef)', icon: '🦋' },
-            { name: 'robert', ig: 'robert.design', bg: 'linear-gradient(135deg, #667eea, #764ba2)', icon: '🎯' },
-            { name: 'olivia', ig: 'olivia.creates', bg: 'linear-gradient(135deg, #89f7fe, #66a6ff)', icon: '💎' },
-            { name: 'michael', ig: 'michael.visual', bg: 'linear-gradient(135deg, #f7971e, #ffd200)', icon: '⚡' },
-            { name: 'isabella', ig: 'isabella.art', bg: 'linear-gradient(135deg, #c1dfc4, #deecdd)', icon: '🌿' },
-            { name: 'william', ig: 'william.studio', bg: 'linear-gradient(135deg, #ffecd2, #fcb69f)', icon: '🎪' },
-            { name: 'ava', ig: 'ava.design', bg: 'linear-gradient(135deg, #e0c3fc, #8ec5fc)', icon: '🔮' },
-            { name: 'richard', ig: 'richard.photo', bg: 'linear-gradient(135deg, #a18cd1, #fbc2eb)', icon: '📷' },
-            { name: 'mia', ig: 'mia.creates', bg: 'linear-gradient(135deg, #fad0c4, #ffd1ff)', icon: '🌺' },
-            { name: 'joseph', ig: 'joseph.art', bg: 'linear-gradient(135deg, #84fab0, #8fd3f4)', icon: '🌊' },
-            { name: 'charlotte', ig: 'charlotte.style', bg: 'linear-gradient(135deg, #a1c4fd, #c2e9fb)', icon: '☁️' },
-            { name: 'thomas', ig: 'thomas.visual', bg: 'linear-gradient(135deg, #ffecd2, #fcb69f)', icon: '🎨' },
-            { name: 'amelia', ig: 'amelia.design', bg: 'linear-gradient(135deg, #fbc2eb, #a6c1ee)', icon: '🦋' }
+            {id: 1, name: "TileGrow", type: "center", src: "tiles/tile_1.png"},
+            {id: 2, name: "Alex", type: "subscriber", src: "tiles/tile_2.png"},
+            {id: 3, name: "Maria", type: "subscriber", src: "tiles/tile_3.png"},
+            {id: 4, name: "John", type: "subscriber", src: "tiles/tile_4.png"},
+            {id: 5, name: "Sarah", type: "subscriber", src: "tiles/tile_5.png"},
+            {id: 6, name: "Mike", type: "subscriber", src: "tiles/tile_6.png"},
+            {id: 7, name: "Emma", type: "subscriber", src: "tiles/tile_7.png"},
+            {id: 8, name: "David", type: "subscriber", src: "tiles/tile_8.png"},
+            {id: 9, name: "Lisa", type: "subscriber", src: "tiles/tile_9.png"},
+            {id: 10, name: "Tom", type: "subscriber", src: "tiles/tile_10.png"},
+            {id: 11, name: "Anna", type: "subscriber", src: "tiles/tile_11.png"},
+            {id: 12, name: "Chris", type: "subscriber", src: "tiles/tile_12.png"},
+            {id: 13, name: "Kate", type: "subscriber", src: "tiles/tile_13.png"},
+            {id: 14, name: "James", type: "subscriber", src: "tiles/tile_14.png"},
+            {id: 15, name: "Nina", type: "subscriber", src: "tiles/tile_15.png"},
+            {id: 16, name: "Paul", type: "subscriber", src: "tiles/tile_16.png"},
+            {id: 17, name: "Lena", type: "subscriber", src: "tiles/tile_17.png"},
+            {id: 18, name: "Mark", type: "subscriber", src: "tiles/tile_18.png"},
+            {id: 19, name: "Olga", type: "subscriber", src: "tiles/tile_19.png"},
+            {id: 20, name: "Ivan", type: "subscriber", src: "tiles/tile_20.png"},
         ];
 
-        // Convert axial coordinates to pixel coordinates for pointy-top hexes
-        function hexToPixel(q, r) {
-            const x = HEX_SIZE * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
-            const y = HEX_SIZE * (3/2 * r);
-            return { x, y };
-        }
-
-        // Get ring and position in ring for spiral layout - clockwise from top
-        function getSpiralPosition(index) {
-            if (index === 0) return { q: 0, r: 0 };
+        // Orbital Layout
+        function createOrbitalLayout() {
+            const centerTile = document.getElementById('center-tile');
+            const orbitContainer = document.getElementById('orbit-tiles');
+            const subscriberTiles = tiles.filter(t => t.type === 'subscriber');
+            const center = tiles.find(t => t.type === 'center');
             
-            let ring = 1;
-            let count = 1;
-            while (count + ring * 6 <= index) {
-                count += ring * 6;
-                ring++;
-            }
-            
-            const posInRing = index - count;
-            
-            // Start at top of ring (q=0, r=-ring) and go clockwise
-            // Directions for pointy-top hexes going clockwise: top-right, bottom-right, bottom, bottom-left, top-left, top
-            const directions = [
-                { dq: 1, dr: -1 },   // top-right (1 o'clock)
-                { dq: 1, dr: 0 },    // bottom-right (3 o'clock)
-                { dq: 0, dr: 1 },    // bottom (5 o'clock)
-                { dq: -1, dr: 1 },   // bottom-left (7 o'clock)
-                { dq: -1, dr: 0 },   // top-left (9 o'clock)
-                { dq: 0, dr: -1 }    // top (11 o'clock)
-            ];
-            
-            // Calculate position: which side and how far along
-            const side = Math.floor(posInRing / ring);
-            const posOnSide = posInRing % ring;
-            
-            // Start from top
-            let q = 0;
-            let r = -ring;
-            
-            // Move to correct side
-            for (let s = 0; s < side; s++) {
-                q += directions[s].dq * ring;
-                r += directions[s].dr * ring;
-            }
-            
-            // Move along current side
-            for (let i = 0; i < posOnSide; i++) {
-                q += directions[side].dq;
-                r += directions[side].dr;
-            }
-            
-            return { q, r };
-        }
-
-        // Create tiles
-        const container = document.getElementById('map-container');
-        const tileElements = [];
-
-        tiles.forEach((tile, index) => {
-            const pos = getSpiralPosition(index);
-            const pixel = hexToPixel(pos.q, pos.r);
-            
-            const el = document.createElement('div');
-            el.className = 'hex-tile' + (tile.center ? ' center-tile' : '');
-            el.style.left = pixel.x + 'px';
-            el.style.top = pixel.y + 'px';
-            el.style.setProperty('--tile-bg', tile.bg);
-            el.innerHTML = `
-                <div class="hex-shape">
-                    <div class="hex-content">
-                        <div class="hex-avatar">${tile.icon}</div>
-                        <div class="hex-name">${tile.name}</div>
-                    </div>
+            // Center tile
+            centerTile.innerHTML = `
+                <div class="tile">
+                    <img src="${center.src}" alt="${center.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 180 180%22><rect fill=%22%236366f1%22 width=%22180%22 height=%22180%22/><text fill=%22white%22 x=%2290%22 y=%2295%22 text-anchor=%22middle%22 font-size=%2220%22>TileGrow</text></svg>'">
+                    <div class="tile-label">${center.name}</div>
                 </div>
-                <span class="hex-label">@${tile.ig}</span>
             `;
             
-            // Click handling with drag detection
-            let isDraggingTile = false;
-            let startX, startY;
+            // Distribute subscribers in orbital rings
+            const rings = [
+                {radius: 200, count: 6, startAngle: 0},
+                {radius: 350, count: 8, startAngle: Math.PI / 8},
+                {radius: 500, count: 6, startAngle: 0}
+            ];
             
-            el.addEventListener('mousedown', (e) => {
-                isDraggingTile = false;
-                startX = e.clientX;
-                startY = e.clientY;
-            });
-            
-            el.addEventListener('mousemove', (e) => {
-                if (Math.abs(e.clientX - startX) > 3 || Math.abs(e.clientY - startY) > 3) {
-                    isDraggingTile = true;
+            let tileIndex = 0;
+            rings.forEach(ring => {
+                const angleStep = (2 * Math.PI) / ring.count;
+                for (let i = 0; i < ring.count && tileIndex < subscriberTiles.length; i++) {
+                    const tile = subscriberTiles[tileIndex];
+                    const angle = ring.startAngle + (i * angleStep);
+                    const x = 600 + ring.radius * Math.cos(angle); // 600 is center of 1200px container
+                    const y = 600 + ring.radius * Math.sin(angle);
+                    
+                    const tileEl = document.createElement('div');
+                    tileEl.className = 'orbit-tile';
+                    tileEl.style.left = x + 'px';
+                    tileEl.style.top = y + 'px';
+                    tileEl.innerHTML = `
+                        <div class="tile">
+                            <img src="${tile.src}" alt="${tile.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 140 140%22><rect fill=%22%238b5cf6%22 width=%22140%22 height=%22140%22/><text fill=%22white%22 x=%2270%22 y=%2275%22 text-anchor=%22middle%22 font-size=%2216%22>${tile.name}</text></svg>'">
+                            <div class="tile-label">${tile.name}</div>
+                        </div>
+                    `;
+                    orbitContainer.appendChild(tileEl);
+                    tileIndex++;
                 }
             });
             
-            el.addEventListener('click', (e) => {
-                if (!isDraggingTile) {
-                    window.open(`https://instagram.com/${tile.ig}`, '_blank');
+            // Update tile count
+            document.getElementById('tile-count').textContent = tiles.length;
+        }
+
+        // Accordion
+        function toggleAccordion() {
+            const header = document.querySelector('.accordion-header');
+            const content = document.getElementById('accordion-content');
+            header.classList.toggle('active');
+            content.classList.toggle('open');
+        }
+
+        // Background System
+        const bgCanvas = document.getElementById('bg-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let bgAnimationId;
+        let currentBg = 'waves';
+
+        function resizeCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Background: Gradient Waves
+        let waveOffset = 0;
+        function drawWaves() {
+            bgCtx.fillStyle = '#0a0a15';
+            bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+            
+            const waves = [
+                {color: 'rgba(99, 102, 241, 0.1)', speed: 0.005, amplitude: 50, frequency: 0.01},
+                {color: 'rgba(139, 92, 246, 0.08)', speed: 0.003, amplitude: 70, frequency: 0.008},
+                {color: 'rgba(99, 102, 241, 0.05)', speed: 0.007, amplitude: 40, frequency: 0.012}
+            ];
+            
+            waves.forEach((wave, i) => {
+                bgCtx.beginPath();
+                bgCtx.fillStyle = wave.color;
+                for (let x = 0; x < bgCanvas.width; x++) {
+                    const y = bgCanvas.height / 2 + Math.sin(x * wave.frequency + waveOffset * wave.speed + i) * wave.amplitude;
+                    if (x === 0) bgCtx.moveTo(x, y);
+                    else bgCtx.lineTo(x, y);
                 }
+                bgCtx.lineTo(bgCanvas.width, bgCanvas.height);
+                bgCtx.lineTo(0, bgCanvas.height);
+                bgCtx.fill();
             });
             
-            container.appendChild(el);
-            tileElements.push(el);
-        });
+            waveOffset++;
+            if (currentBg === 'waves') bgAnimationId = requestAnimationFrame(drawWaves);
+        }
 
-        // Pan and zoom
-        let scale = 1;
-        let translateX = 0, translateY = 0;
-        let isDragging = false;
-        let startDragX, startDragY;
+        // Background: Connected Particles
+        const particles = [];
+        for (let i = 0; i < 50; i++) {
+            particles.push({
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5
+            });
+        }
 
+        function drawParticles() {
+            bgCtx.fillStyle = '#0a0a15';
+            bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+            
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0 || p.x > bgCanvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > bgCanvas.height) p.vy *= -1;
+            });
+            
+            bgCtx.strokeStyle = 'rgba(99, 102, 241, 0.15)';
+            bgCtx.lineWidth = 1;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 150) {
+                        bgCtx.beginPath();
+                        bgCtx.moveTo(particles[i].x, particles[i].y);
+                        bgCtx.lineTo(particles[j].x, particles[j].y);
+                        bgCtx.stroke();
+                    }
+                }
+            }
+            
+            bgCtx.fillStyle = 'rgba(99, 102, 241, 0.4)';
+            particles.forEach(p => {
+                bgCtx.beginPath();
+                bgCtx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                bgCtx.fill();
+            });
+            
+            if (currentBg === 'particles') bgAnimationId = requestAnimationFrame(drawParticles);
+        }
+
+        // Background: Morphing Geometry
+        let morphTime = 0;
+        function drawMorphing() {
+            bgCtx.fillStyle = '#0a0a15';
+            bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+            
+            const shapes = 5;
+            for (let i = 0; i < shapes; i++) {
+                const x = bgCanvas.width / 2 + Math.sin(morphTime * 0.001 + i * 1.5) * 200;
+                const y = bgCanvas.height / 2 + Math.cos(morphTime * 0.0015 + i * 1.2) * 150;
+                const radius = 100 + Math.sin(morphTime * 0.002 + i) * 50;
+                
+                const gradient = bgCtx.createRadialGradient(x, y, 0, x, y, radius);
+                gradient.addColorStop(0, `rgba(99, 102, 241, ${0.1 - i * 0.015})`);
+                gradient.addColorStop(1, 'transparent');
+                
+                bgCtx.fillStyle = gradient;
+                bgCtx.beginPath();
+                bgCtx.arc(x, y, radius, 0, Math.PI * 2);
+                bgCtx.fill();
+            }
+            
+            morphTime++;
+            if (currentBg === 'morphing') bgAnimationId = requestAnimationFrame(drawMorphing);
+        }
+
+        function setBackground(type) {
+            if (bgAnimationId) cancelAnimationFrame(bgAnimationId);
+            currentBg = type;
+            
+            document.querySelectorAll('.bg-option').forEach(opt => opt.classList.remove('active'));
+            document.querySelector(`[data-bg="${type}"]`).classList.add('active');
+            localStorage.setItem('tilegrow-bg', type);
+            
+            if (type === 'waves') drawWaves();
+            else if (type === 'particles') drawParticles();
+            else if (type === 'morphing') drawMorphing();
+        }
+
+        // Viewport controls
+        let scale = 1, tx = 0, ty = 0, dragging = false, lx = 0, ly = 0;
+        const container = document.getElementById('map-container');
         const viewport = document.getElementById('viewport');
 
-        function updateTransform() {
-            container.style.transform = `translate(calc(-50% + ${translateX}px), calc(-50% + ${translateY}px)) scale(${scale})`;
+        function update() {
+            container.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
         }
 
-        function centerOnTile(index) {
-            const tile = tiles[index];
-            const pos = getSpiralPosition(index);
-            const pixel = hexToPixel(pos.q, pos.r);
-            translateX = -pixel.x;
-            translateY = -pixel.y;
-            scale = 1.5;
-            updateTransform();
+        function center() {
+            const vw = viewport.clientWidth, vh = viewport.clientHeight;
+            tx = (vw - 1200) / 2;
+            ty = (vh - 1200) / 2;
+            update();
         }
 
-        function startTour() {
-            centerOnTile(0);
-            const startScale = 1.5;
-            const endScale = 0.6;
-            const duration = 6000;
-            const startTime = Date.now();
-            
-            function animate() {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                scale = startScale - (startScale - endScale) * progress;
-                updateTransform();
-                
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
+        viewport.addEventListener('mousedown', e => { dragging = true; lx = e.clientX; ly = e.clientY; viewport.style.cursor = 'grabbing'; });
+        viewport.addEventListener('mousemove', e => { 
+            if (dragging) { tx += e.clientX - lx; ty += e.clientY - ly; lx = e.clientX; ly = e.clientY; update(); }
+        });
+        viewport.addEventListener('mouseup', () => { dragging = false; viewport.style.cursor = 'grab'; });
+        viewport.addEventListener('wheel', e => { 
+            e.preventDefault(); 
+            scale *= e.deltaY > 0 ? 0.9 : 1.1; 
+            scale = Math.max(0.3, Math.min(5, scale)); 
+            update(); 
+        }, {passive: false});
+
+        function animateZoomOut() { 
+            scale = 2; update(); 
+            let s = scale; 
+            const anim = () => { 
+                s -= 0.02; 
+                if (s > 0.6) { scale = s; update(); requestAnimationFrame(anim); }
+            }; 
+            anim(); 
+            document.getElementById('record-hint').classList.add('show'); 
+            setTimeout(() => document.getElementById('record-hint').classList.remove('show'), 5000); 
+        }
+
+        function autoTour() { 
+            scale = 1.5; center(); 
+            const positions = [{s:1.2,x:0,y:0},{s:0.9,x:100,y:-50},{s:0.7,x:0,y:100},{s:0.5,x:0,y:0}]; 
+            let i = 0; 
+            const step = () => { 
+                if (i < positions.length) { 
+                    const p = positions[i]; scale = p.s; tx = p.x + (viewport.clientWidth - 1200) / 2; ty = p.y + (viewport.clientHeight - 1200) / 2; 
+                    update(); i++; setTimeout(step, 1200); 
                 }
-            }
-            animate();
+            }; 
+            step(); 
         }
 
-        function resetView() {
-            scale = 1;
-            translateX = 0;
-            translateY = 0;
-            updateTransform();
+        let labelsOn = false;
+        function toggleLabels() { 
+            labelsOn = !labelsOn; 
+            document.querySelectorAll('.tile-label').forEach(l => l.style.opacity = labelsOn ? '1' : '');
         }
-
-        // Mouse events
-        viewport.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startDragX = e.clientX - translateX;
-            startDragY = e.clientY - translateY;
-            viewport.style.cursor = 'grabbing';
-        });
-
-        viewport.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                translateX = e.clientX - startDragX;
-                translateY = e.clientY - startDragY;
-                updateTransform();
-            }
-        });
-
-        viewport.addEventListener('mouseup', () => {
-            isDragging = false;
-            viewport.style.cursor = 'grab';
-        });
-
-        viewport.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const delta = e.deltaY > 0 ? 0.9 : 1.1;
-            scale = Math.max(0.3, Math.min(4, scale * delta));
-            updateTransform();
-        });
-
-        // Touch events
-        viewport.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) {
-                isDragging = true;
-                startDragX = e.touches[0].clientX - translateX;
-                startDragY = e.touches[0].clientY - translateY;
-            }
-        }, { passive: false });
-
-        viewport.addEventListener('touchmove', (e) => {
-            if (isDragging && e.touches.length === 1) {
-                translateX = e.touches[0].clientX - startDragX;
-                translateY = e.touches[0].clientY - startDragY;
-                updateTransform();
-                e.preventDefault();
-            }
-        }, { passive: false });
-
-        viewport.addEventListener('touchend', () => {
-            isDragging = false;
-        });
 
         // Search functionality
-        const searchInput = document.getElementById('search-input');
-        const searchResults = document.getElementById('search-results');
-
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            if (query.length < 2) {
-                searchResults.style.display = 'none';
-                return;
-            }
-
-            const matches = tiles.map((t, i) => ({ ...t, index: i })).filter(t => 
-                t.name.toLowerCase().includes(query) || t.ig.toLowerCase().includes(query)
-            );
-
-            searchResults.innerHTML = matches.map(t => `
-                <div class="search-result-item" data-index="${t.index}">@${t.ig}</div>
-            `).join('');
-
-            searchResults.style.display = matches.length ? 'block' : 'none';
-
-            document.querySelectorAll('.search-result-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    centerOnTile(parseInt(item.dataset.index));
-                    searchResults.style.display = 'none';
-                    searchInput.value = '';
-                });
+        function searchTiles(query) {
+            const lowerQuery = query.toLowerCase().trim();
+            const allTiles = document.querySelectorAll('.orbit-tile, .center-tile');
+            
+            allTiles.forEach(tileEl => {
+                const name = tileEl.querySelector('.tile-label')?.textContent.toLowerCase() || '';
+                if (lowerQuery === '') {
+                    tileEl.style.opacity = '1';
+                    tileEl.style.filter = 'none';
+                } else if (name.includes(lowerQuery)) {
+                    tileEl.style.opacity = '1';
+                    tileEl.style.filter = 'drop-shadow(0 0 10px rgba(99, 102, 241, 0.8))';
+                } else {
+                    tileEl.style.opacity = '0.3';
+                    tileEl.style.filter = 'none';
+                }
             });
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#search-container')) {
-                searchResults.style.display = 'none';
-            }
-        });
+        }
 
         // Initialize
-        updateTransform();
-        centerOnTile(0);
-    </script>
-</body>
-</html>
+        createOrbitalLayout();
+        center();
+        const savedBg = localStorage.getItem('tilegrow-bg') || 'waves';
+        setBackground(savedBg);
+
+        setTimeout(() => { 
+            const hint = document.getElementById('record-hint'); 
+            hint.textContent = '👆 Double tap to zoom • Drag to explore'; 
+            hint.classList.add('show'); 
+            setTimeout(() => hint.classList.remove('show'), 4000); 
+        }, 2000);
