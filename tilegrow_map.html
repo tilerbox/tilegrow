@@ -383,22 +383,21 @@
             {id: 20, name: "Emily", type: "subscriber", src: "tiles/emily.png"}
         ];
 
-        // Hexagonal spiral layout
+        // Hexagonal ring layout - proper order
         function createHexLayout() {
             const container = document.getElementById('hex-container');
             const subscriberTiles = tiles.filter(t => t.type === 'subscriber');
             const centerTile = tiles.find(t => t.type === 'center');
             
-            const hexWidth = 160;
-            const hexHeight = 184;
-            const hOffset = hexWidth * 0.75;
-            const vOffset = hexHeight * 0.5;
+            const hexSize = 160;
+            const w = hexSize * 0.866; // width of hex (sqrt(3)/2)
+            const h = hexSize * 0.75;  // vertical distance between rows
             
-            // Center position (center of 2000px container)
+            // Center position
             const centerX = 1000;
             const centerY = 1000;
             
-            // Place center tile
+            // Place center tile (TileGrow)
             const centerEl = document.createElement('div');
             centerEl.className = 'hex-tile center';
             centerEl.style.left = centerX + 'px';
@@ -412,48 +411,63 @@
             `;
             container.appendChild(centerEl);
             
-            // Hex spiral coordinates (rings around center)
-            const directions = [
-                [1, 0], [0.5, -1], [-0.5, -1], [-1, 0], [-0.5, 1], [0.5, 1]
-            ];
+            // Generate hex positions in ring order (as shown on AB's diagram)
+            // Ring 1: 6 positions around center
+            // Ring 2: 12 positions, etc.
+            const positions = [];
             
-            let ring = 1;
-            let tileIndex = 0;
-            
-            while (tileIndex < subscriberTiles.length) {
-                // Start position for this ring
-                let x = ring;
-                let y = 0;
-                
-                for (let side = 0; side < 6 && tileIndex < subscriberTiles.length; side++) {
-                    for (let step = 0; step < ring && tileIndex < subscriberTiles.length; step++) {
-                        const tile = subscriberTiles[tileIndex];
-                        
-                        // Convert hex to pixel coordinates
-                        const px = centerX + x * hOffset;
-                        const py = centerY + (y * vOffset * 2) + (x % 2 !== 0 ? vOffset : 0);
-                        
-                        const tileEl = document.createElement('div');
-                        tileEl.className = 'hex-tile';
-                        tileEl.style.left = px + 'px';
-                        tileEl.style.top = py + 'px';
-                        tileEl.innerHTML = `
-                            <div class="hex-inner">
-                                <img src="${tile.src}" alt="${tile.name}" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #8b5cf6, #6366f1)'">
-                                <div class="hex-label">${tile.name}</div>
-                            </div>
-                        `;
-                        container.appendChild(tileEl);
-                        
-                        tileIndex++;
-                        
-                        // Move to next hex in ring
-                        x += directions[side][0];
-                        y += directions[side][1];
-                    }
-                }
-                ring++;
+            // Helper to add position
+            function addPosition(q, r) {
+                // Convert axial coordinates to pixel
+                const x = centerX + w * (q + r/2);
+                const y = centerY + h * r;
+                positions.push({x, y});
             }
+            
+            // Ring 0: center (already placed)
+            
+            // Ring 1: 6 tiles around center (starting from right, going clockwise)
+            // Directions: E, NE, NW, W, SW, SE
+            const ring1 = [
+                [1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]
+            ];
+            ring1.forEach(([q, r]) => addPosition(q, r));
+            
+            // Ring 2: 12 tiles
+            const ring2 = [
+                [2, 0], [2, -1], [2, -2], [1, -2], [0, -2], 
+                [-1, -1], [-2, 0], [-2, 1], [-2, 2], [-1, 2], 
+                [0, 2], [1, 1]
+            ];
+            ring2.forEach(([q, r]) => addPosition(q, r));
+            
+            // Ring 3: 18 tiles
+            const ring3 = [
+                [3, 0], [3, -1], [3, -2], [3, -3], [2, -3], [1, -3], [0, -3],
+                [-1, -2], [-2, -2], [-3, 0], [-3, 1], [-3, 2], [-3, 3],
+                [-2, 3], [-1, 3], [0, 3], [1, 2], [2, 1]
+            ];
+            ring3.forEach(([q, r]) => addPosition(q, r));
+            
+            // Place tiles in ring order
+            let tileIndex = 0;
+            positions.forEach((pos, i) => {
+                if (tileIndex >= subscriberTiles.length) return;
+                
+                const tile = subscriberTiles[tileIndex];
+                const tileEl = document.createElement('div');
+                tileEl.className = 'hex-tile';
+                tileEl.style.left = pos.x + 'px';
+                tileEl.style.top = pos.y + 'px';
+                tileEl.innerHTML = `
+                    <div class="hex-inner">
+                        <img src="${tile.src}" alt="${tile.name}" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #8b5cf6, #6366f1)'">
+                        <div class="hex-label">${tile.name}</div>
+                    </div>
+                `;
+                container.appendChild(tileEl);
+                tileIndex++;
+            });
             
             document.getElementById('tile-count').textContent = tiles.length;
         }
