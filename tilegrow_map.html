@@ -1,4 +1,3 @@
-// v1772961275
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,91 +37,78 @@
             transition: transform 0.08s ease-out; 
         }
         
-        /* Orbital Layout Styles */
-        .orbital-container {
+        /* Hexagonal Layout */
+        .hex-container {
             position: relative;
-            width: 1200px;
-            height: 1200px;
+            width: 2000px;
+            height: 2000px;
         }
         
-        .center-tile {
+        .hex-tile {
             position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-        }
-        
-        .orbit-ring {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 50%;
-        }
-        
-        .orbit-tile {
-            position: absolute;
+            width: 160px;
+            height: 184px;
             transform: translate(-50%, -50%);
             transition: all 0.3s ease;
+            cursor: pointer;
         }
         
-        .tile { 
-            width: 140px; 
-            height: 140px; 
-            border-radius: 16px; 
-            overflow: hidden; 
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5); 
-            transition: all 0.3s ease; 
-            cursor: pointer;
+        .hex-tile:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            z-index: 100;
+        }
+        
+        .hex-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
             background: #1a1a2e;
         }
         
-        .tile:hover { 
-            transform: scale(1.15); 
-            box-shadow: 0 12px 40px rgba(0,0,0,0.6); 
-            z-index: 100; 
+        .hex-tile:hover .hex-inner {
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
         }
         
-        .center-tile .tile {
+        .hex-tile.center .hex-inner {
             width: 200px;
-            height: 200px;
-            box-shadow: 0 12px 48px rgba(99, 102, 241, 0.4);
+            height: 230px;
             animation: glow 2s ease-in-out infinite;
         }
         
-        .tile img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            display: block; 
+        .hex-inner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
         
-        .tile-label { 
-            position: absolute; 
-            bottom: 10px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            background: rgba(0,0,0,0.8); 
-            color: #fff; 
-            padding: 6px 12px; 
-            border-radius: 20px; 
-            font-size: 12px; 
-            font-weight: 600; 
-            opacity: 0; 
-            transition: opacity 0.2s, transform 0.2s; 
+        .hex-label {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.2s;
             white-space: nowrap;
+            pointer-events: none;
         }
         
-        .tile:hover .tile-label { 
-            opacity: 1; 
-            transform: translateX(-50%) translateY(-5px); 
+        .hex-tile:hover .hex-label {
+            opacity: 1;
         }
         
-        @keyframes glow { 
-            0%, 100% { box-shadow: 0 12px 48px rgba(99, 102, 241, 0.4); } 
-            50% { box-shadow: 0 12px 48px rgba(99, 102, 241, 0.8); } 
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4)); }
+            50% { filter: drop-shadow(0 0 40px rgba(99, 102, 241, 0.8)); }
         }
         
         /* Header */
@@ -131,106 +117,120 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 70px;
+            height: 60px;
             background: rgba(10, 10, 21, 0.8);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255,255,255,0.1);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 30px;
+            padding: 0 20px;
             z-index: 1000;
         }
         
         #logo {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
             background: linear-gradient(135deg, #fff, #a5b4fc);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
         }
         
-        #search-bar {
-            position: relative;
-            flex: 0 1 400px;
-            max-width: 400px;
-        }
-        
-        #search-input {
-            width: 100%;
-            height: 42px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 21px;
-            padding: 0 42px 0 20px;
+        #stats-header {
             color: #fff;
             font-size: 14px;
-            outline: none;
-            transition: all 0.2s;
-        }
-        
-        #search-input::placeholder {
-            color: rgba(255,255,255,0.4);
-        }
-        
-        #search-input:focus {
-            background: rgba(255,255,255,0.12);
-            border-color: rgba(99, 102, 241, 0.5);
-        }
-        
-        #search-icon {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            opacity: 0.5;
-            font-size: 14px;
-            pointer-events: none;
+            opacity: 0.8;
         }
         
         #instagram-link {
             color: #fff;
             opacity: 0.7;
             transition: opacity 0.2s;
+        }
+        
+        #instagram-link:hover { opacity: 1; }
+        
+        /* Left Controls */
+        #controls-left {
+            position: fixed;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 2000;
+        }
+        
+        .btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+            transition: all 0.2s;
             display: flex;
             align-items: center;
+            justify-content: center;
         }
         
-        #instagram-link:hover {
-            opacity: 1;
+        .btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.05);
         }
         
-        /* Stats */
-        #stats { 
-            position: fixed; 
-            top: 90px; 
-            right: 30px; 
-            color: #fff; 
-            text-align: right; 
-            z-index: 1000; 
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
         }
-        #stats .number { 
-            font-size: 36px; 
-            font-weight: 700; 
-            background: linear-gradient(135deg, #6366f1, #8b5cf6); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
+        
+        /* Right Background Selector */
+        #bg-selector {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 2000;
         }
-        #stats .label { 
-            font-size: 12px; 
-            opacity: 0.6; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
+        
+        .bg-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            font-size: 22px;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .bg-btn:hover {
+            background: rgba(255,255,255,0.15);
+            transform: scale(1.05);
+        }
+        
+        .bg-btn.active {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.3);
         }
         
         /* Accordion */
         #how-to-accordion {
             position: fixed;
-            top: 90px;
-            left: 30px;
-            width: 280px;
+            top: 80px;
+            left: 20px;
+            width: 260px;
             z-index: 1000;
         }
         
@@ -238,188 +238,72 @@
             background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2);
             color: #fff;
-            padding: 14px 20px;
-            border-radius: 12px;
-            font-size: 14px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            transition: all 0.3s ease;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
-        .accordion-header:hover {
-            background: rgba(255,255,255,0.15);
-        }
-        
         .accordion-header.active {
-            border-radius: 12px 12px 0 0;
+            border-radius: 10px 10px 0 0;
             background: rgba(99, 102, 241, 0.3);
         }
         
-        .accordion-icon {
-            transition: transform 0.3s ease;
-        }
-        
-        .accordion-header.active .accordion-icon {
-            transform: rotate(180deg);
-        }
-        
         .accordion-content {
-            background: rgba(20,20,35,0.9);
+            background: rgba(20,20,35,0.95);
             border: 1px solid rgba(255,255,255,0.1);
             border-top: none;
-            border-radius: 0 0 12px 12px;
+            border-radius: 0 0 10px 10px;
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease, padding 0.3s ease;
+            transition: max-height 0.3s ease;
         }
         
         .accordion-content.open {
-            max-height: 200px;
-            padding: 20px;
+            max-height: 150px;
+            padding: 16px;
         }
         
         .accordion-content p {
             color: rgba(255,255,255,0.8);
-            font-size: 13px;
-            line-height: 1.6;
-            margin-bottom: 12px;
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 8px;
         }
         
         .accordion-content a {
             color: #6366f1;
             text-decoration: none;
-            font-weight: 600;
         }
         
-        .accordion-content a:hover {
-            text-decoration: underline;
-        }
-        
-        /* Controls */
-        #controls { 
-            position: fixed; 
-            bottom: 30px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            display: flex; 
-            gap: 12px; 
-            z-index: 2000; 
-            padding: 0 20px; 
-            flex-wrap: wrap; 
-            justify-content: center; 
-            pointer-events: auto;
-        }
-        
-        .btn { 
-            background: rgba(255,255,255,0.1); 
-            border: 1px solid rgba(255,255,255,0.2); 
-            color: #fff; 
-            padding: 14px 28px; 
-            border-radius: 30px; 
-            font-size: 14px; 
-            font-weight: 500; 
-            cursor: pointer; 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px); 
-            transition: all 0.2s; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            pointer-events: auto;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: manipulation;
-        }
-        
-        .btn:hover { 
-            background: rgba(255,255,255,0.2); 
-            transform: translateY(-3px); 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4); 
-        }
-        
-        .btn:active {
-            transform: translateY(-1px);
-        }
-        
-        .btn-primary { 
-            background: linear-gradient(135deg, #6366f1, #8b5cf6); 
-            border: none; 
-        }
-        
-        .btn-primary:hover { 
-            background: linear-gradient(135deg, #5558e0, #7c4de0); 
-        }
-        
-        /* Background Selector */
-        #bg-selector {
-            position: fixed;
-            bottom: 100px;
-            right: 30px;
-            z-index: 1000;
-            background: rgba(20,20,35,0.9);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px;
-            padding: 16px;
-            backdrop-filter: blur(20px);
-        }
-        
-        #bg-selector h3{
-            color: #fff;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-            opacity: 0.8;
-        }
-        
-        .bg-options {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .bg-option {
-            background: rgba(255,255,255,0.05);
-            border: 2px solid transparent;
-            color: #fff;
-            padding: 10px 16px;
-            border-radius: 10px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: left;
-        }
-        
-        .bg-option:hover {
-            background: rgba(255,255,255,0.1);
-        }
-        
-        .bg-option.active {
-            border-color: #6366f1;
-            background: rgba(99, 102, 241, 0.2);
-        }
-        
-        .record-hint { 
-            position: fixed; 
-            bottom: 100px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            background: rgba(99, 102, 241, 0.9); 
-            color: #fff; 
-            padding: 10px 20px; 
-            border-radius: 25px; 
-            font-size: 13px; 
-            opacity: 0; 
-            transition: opacity 0.5s; 
-            pointer-events: none; 
-            z-index: 999;
-        }
-        
-        .record-hint.show { 
-            opacity: 1; 
+        /* Responsive */
+        @media (max-width: 768px) {
+            #controls-left {
+                left: 10px;
+                gap: 8px;
+            }
+            .btn {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+            }
+            #bg-selector {
+                right: 10px;
+                gap: 6px;
+            }
+            .bg-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+            #how-to-accordion {
+                width: 200px;
+            }
         }
     </style>
 </head>
@@ -429,79 +313,53 @@
     <!-- Header -->
     <div id="header">
         <div id="logo">TileGrow</div>
-        <div id="search-bar">
-            <input type="text" id="search-input" placeholder="Search tiles..." onkeyup="searchTiles(this.value)">
-            <span id="search-icon">🔍</span>
-        </div>
-        <a href="https://instagram.com/tilegrow" target="_blank" id="instagram-link" title="@tilegrow on Instagram">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+        <div id="stats-header"><span id="tile-count">0</span> tiles</div>
+        <a href="https://instagram.com/tilegrow" target="_blank" id="instagram-link">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="2" width="20" height="20" rx="5"></rect>
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
             </svg>
         </a>
     </div>
     
-    <div id="stats">
-        <div class="number" id="tile-count">20</div>
-        <div class="label">Tiles</div>
+    <!-- Left Controls -->
+    <div id="controls-left">
+        <button class="btn" onclick="center()" title="Center">⌖</button>
+        <button class="btn btn-primary" onclick="animateZoomOut()" title="Reel Zoom">🔍</button>
+        <button class="btn" onclick="autoTour()" title="Tour">🎬</button>
+        <button class="btn" onclick="toggleLabels()" title="Names">🏷️</button>
     </div>
     
+    <!-- Right Background Selector -->
+    <div id="bg-selector">
+        <button class="bg-btn active" onclick="setBackground('waves')" title="Waves">🌊</button>
+        <button class="bg-btn" onclick="setBackground('particles')" title="Particles">✨</button>
+        <button class="bg-btn" onclick="setBackground('morphing')" title="Morphing">🌀</button>
+    </div>
+    
+    <!-- Accordion -->
     <div id="how-to-accordion">
         <div class="accordion-header" onclick="toggleAccordion()">
             <span>📱 How to get your tile</span>
-            <span class="accordion-icon">▼</span>
+            <span>▼</span>
         </div>
         <div class="accordion-content" id="accordion-content">
-            <p>1. Follow <a href="https://instagram.com/tilegrow" target="_blank">@tilegrow</a> on Instagram</p>
-            <p>2. Send us a DM with your name</p>
-            <p>3. We'll generate your unique tile and add you to the map!</p>
+            <p>1. Follow <a href="https://instagram.com/tilegrow" target="_blank">@tilegrow</a></p>
+            <p>2. Send DM with your name</p>
+            <p>3. We'll add you to the map!</p>
         </div>
     </div>
     
-    <div class="record-hint" id="record-hint">📱 Record screen for Reels</div>
-    
+    <!-- Viewport -->
     <div id="viewport">
         <div id="map-container">
-            <div class="orbital-container" id="orbital-container">
-                <!-- Center tile -->
-                <div class="center-tile" id="center-tile"></div>
-                
-                <!-- Orbit rings -->
-                <div class="orbit-ring" style="width: 300px; height: 300px;"></div>
-                <div class="orbit-ring" style="width: 500px; height: 500px;"></div>
-                <div class="orbit-ring" style="width: 700px; height: 700px;"></div>
-                
-                <!-- Subscriber tiles container -->
-                <div id="orbit-tiles"></div>
-            </div>
-        </div>
-    </div>
-    
-    <div id="controls">
-        <button class="btn" onclick="center()">⌖ Center</button>
-        <button class="btn btn-primary" onclick="animateZoomOut()">🔍 Reel Zoom</button>
-        <button class="btn" onclick="autoTour()">🎬 Tour</button>
-        <button class="btn" onclick="toggleLabels()">🏷️ Names</button>
-    </div>
-    
-    <div id="bg-selector">
-        <h3>Background Style</h3>
-        <div class="bg-options">
-            <div class="bg-option active" onclick="setBackground('waves')" data-bg="waves">
-                🌊 Gradient Waves
-            </div>
-            <div class="bg-option" onclick="setBackground('particles')" data-bg="particles">
-                ✨ Connected Particles
-            </div>
-            <div class="bg-option" onclick="setBackground('morphing')" data-bg="morphing">
-                🌀 Morphing Geometry
-            </div>
+            <div class="hex-container" id="hex-container"></div>
         </div>
     </div>
 
     <script>
-        // Sample tile data - using actual files from tiles/
+        // Tile data
         const tiles = [
             {id: 1, name: "TileGrow", type: "center", src: null},
             {id: 2, name: "Abigail", type: "subscriber", src: "tiles/abigail.png"},
@@ -525,54 +383,78 @@
             {id: 20, name: "Emily", type: "subscriber", src: "tiles/emily.png"}
         ];
 
-        // Orbital Layout
-        function createOrbitalLayout() {
-            const centerTile = document.getElementById('center-tile');
-            const orbitContainer = document.getElementById('orbit-tiles');
+        // Hexagonal spiral layout
+        function createHexLayout() {
+            const container = document.getElementById('hex-container');
             const subscriberTiles = tiles.filter(t => t.type === 'subscriber');
-            const center = tiles.find(t => t.type === 'center');
+            const centerTile = tiles.find(t => t.type === 'center');
             
-            // Center tile - use SVG placeholder since no image exists
-            centerTile.innerHTML = `
-                <div class="tile" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-family: system-ui;">
-                    <div style="font-size: 28px; font-weight: bold;">Tile</div>
-                    <div style="font-size: 28px; font-weight: bold;">Grow</div>
-                    <div class="tile-label">${center.name}</div>
+            const hexWidth = 160;
+            const hexHeight = 184;
+            const hOffset = hexWidth * 0.75;
+            const vOffset = hexHeight * 0.5;
+            
+            // Center position (center of 2000px container)
+            const centerX = 1000;
+            const centerY = 1000;
+            
+            // Place center tile
+            const centerEl = document.createElement('div');
+            centerEl.className = 'hex-tile center';
+            centerEl.style.left = centerX + 'px';
+            centerEl.style.top = centerY + 'px';
+            centerEl.innerHTML = `
+                <div class="hex-inner" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white;">
+                    <div style="font-size: 24px; font-weight: bold;">Tile</div>
+                    <div style="font-size: 24px; font-weight: bold;">Grow</div>
+                    <div class="hex-label">${centerTile.name}</div>
                 </div>
             `;
+            container.appendChild(centerEl);
             
-            // Distribute subscribers in orbital rings
-            const rings = [
-                {radius: 200, count: 6, startAngle: 0},
-                {radius: 350, count: 8, startAngle: Math.PI / 8},
-                {radius: 500, count: 6, startAngle: 0}
+            // Hex spiral coordinates (rings around center)
+            const directions = [
+                [1, 0], [0.5, -1], [-0.5, -1], [-1, 0], [-0.5, 1], [0.5, 1]
             ];
             
+            let ring = 1;
             let tileIndex = 0;
-            rings.forEach(ring => {
-                const angleStep = (2 * Math.PI) / ring.count;
-                for (let i = 0; i < ring.count && tileIndex < subscriberTiles.length; i++) {
-                    const tile = subscriberTiles[tileIndex];
-                    const angle = ring.startAngle + (i * angleStep);
-                    const x = 600 + ring.radius * Math.cos(angle); // 600 is center of 1200px container
-                    const y = 600 + ring.radius * Math.sin(angle);
-                    
-                    const tileEl = document.createElement('div');
-                    tileEl.className = 'orbit-tile';
-                    tileEl.style.left = x + 'px';
-                    tileEl.style.top = y + 'px';
-                    tileEl.innerHTML = `
-                        <div class="tile">
-                            <img src="${tile.src}" alt="${tile.name}">
-                            <div class="tile-label">${tile.name}</div>
-                        </div>
-                    `;
-                    orbitContainer.appendChild(tileEl);
-                    tileIndex++;
-                }
-            });
             
-            // Update tile count
+            while (tileIndex < subscriberTiles.length) {
+                // Start position for this ring
+                let x = ring;
+                let y = 0;
+                
+                for (let side = 0; side < 6 && tileIndex < subscriberTiles.length; side++) {
+                    for (let step = 0; step < ring && tileIndex < subscriberTiles.length; step++) {
+                        const tile = subscriberTiles[tileIndex];
+                        
+                        // Convert hex to pixel coordinates
+                        const px = centerX + x * hOffset;
+                        const py = centerY + (y * vOffset * 2) + (x % 2 !== 0 ? vOffset : 0);
+                        
+                        const tileEl = document.createElement('div');
+                        tileEl.className = 'hex-tile';
+                        tileEl.style.left = px + 'px';
+                        tileEl.style.top = py + 'px';
+                        tileEl.innerHTML = `
+                            <div class="hex-inner">
+                                <img src="${tile.src}" alt="${tile.name}" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #8b5cf6, #6366f1)'">
+                                <div class="hex-label">${tile.name}</div>
+                            </div>
+                        `;
+                        container.appendChild(tileEl);
+                        
+                        tileIndex++;
+                        
+                        // Move to next hex in ring
+                        x += directions[side][0];
+                        y += directions[side][1];
+                    }
+                }
+                ring++;
+            }
+            
             document.getElementById('tile-count').textContent = tiles.length;
         }
 
@@ -627,15 +509,12 @@
         }
 
         // Background: Connected Particles
-        const particles = [];
-        for (let i = 0; i < 50; i++) {
-            particles.push({
-                x: Math.random() * window.innerWidth,
-                y: Math.random() * window.innerHeight,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: (Math.random() - 0.5) * 0.5
-            });
-        }
+        const particles = Array.from({length: 50}, () => ({
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5
+        }));
 
         function drawParticles() {
             bgCtx.fillStyle = '#0a0a15';
@@ -654,8 +533,7 @@
                 for (let j = i + 1; j < particles.length; j++) {
                     const dx = particles[i].x - particles[j].x;
                     const dy = particles[i].y - particles[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 150) {
+                    if (Math.sqrt(dx*dx + dy*dy) < 150) {
                         bgCtx.beginPath();
                         bgCtx.moveTo(particles[i].x, particles[i].y);
                         bgCtx.lineTo(particles[j].x, particles[j].y);
@@ -680,8 +558,7 @@
             bgCtx.fillStyle = '#0a0a15';
             bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
             
-            const shapes = 5;
-            for (let i = 0; i < shapes; i++) {
+            for (let i = 0; i < 5; i++) {
                 const x = bgCanvas.width / 2 + Math.sin(morphTime * 0.001 + i * 1.5) * 200;
                 const y = bgCanvas.height / 2 + Math.cos(morphTime * 0.0015 + i * 1.2) * 150;
                 const radius = 100 + Math.sin(morphTime * 0.002 + i) * 50;
@@ -704,8 +581,8 @@
             if (bgAnimationId) cancelAnimationFrame(bgAnimationId);
             currentBg = type;
             
-            document.querySelectorAll('.bg-option').forEach(opt => opt.classList.remove('active'));
-            document.querySelector(`[data-bg="${type}"]`).classList.add('active');
+            document.querySelectorAll('.bg-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
             localStorage.setItem('tilegrow-bg', type);
             
             if (type === 'waves') drawWaves();
@@ -714,7 +591,7 @@
         }
 
         // Viewport controls
-        let scale = 1, tx = 0, ty = 0, dragging = false, lx = 0, ly = 0;
+        let scale = 0.8, tx = 0, ty = 0, dragging = false, lx = 0, ly = 0;
         const container = document.getElementById('map-container');
         const viewport = document.getElementById('viewport');
 
@@ -723,24 +600,23 @@
         }
 
         function center() {
-            const vw = viewport.clientWidth, vh = viewport.clientHeight;
-            tx = (vw - 1200) / 2;
-            ty = (vh - 1200) / 2;
+            tx = (viewport.clientWidth - 2000 * scale) / 2;
+            ty = (viewport.clientHeight - 2000 * scale) / 2;
             update();
         }
 
-        viewport.addEventListener('mousedown', e => { dragging = true; lx = e.clientX; ly = e.clientY; viewport.style.cursor = 'grabbing'; });
+        viewport.addEventListener('mousedown', e => { dragging = true; lx = e.clientX; ly = e.clientY; });
         viewport.addEventListener('mousemove', e => { 
             if (dragging) { tx += e.clientX - lx; ty += e.clientY - ly; lx = e.clientX; ly = e.clientY; update(); }
         });
-        viewport.addEventListener('mouseup', () => { dragging = false; viewport.style.cursor = 'grab'; });
+        viewport.addEventListener('mouseup', () => dragging = false);
         viewport.addEventListener('wheel', e => { 
             e.preventDefault(); 
             scale *= e.deltaY > 0 ? 0.9 : 1.1; 
-            scale = Math.max(0.3, Math.min(5, scale)); 
+            scale = Math.max(0.3, Math.min(3, scale)); 
             update(); 
         }, {passive: false});
-        
+
         // Touch support
         viewport.addEventListener('touchstart', e => {
             if (e.touches.length === 1) {
@@ -759,71 +635,50 @@
                 e.preventDefault();
             }
         }, {passive: false});
-        viewport.addEventListener('touchend', () => { dragging = false; });
+        viewport.addEventListener('touchend', () => dragging = false);
 
-        function animateZoomOut() { 
-            scale = 2; update(); 
-            let s = scale; 
+        function animateZoomOut() {
+            scale = 1.5;
+            center();
+            let s = scale;
             const anim = () => { 
                 s -= 0.02; 
-                if (s > 0.6) { scale = s; update(); requestAnimationFrame(anim); }
+                if (s > 0.4) { scale = s; update(); requestAnimationFrame(anim); }
             }; 
-            anim(); 
-            document.getElementById('record-hint').classList.add('show'); 
-            setTimeout(() => document.getElementById('record-hint').classList.remove('show'), 5000); 
+            anim();
         }
 
-        function autoTour() { 
-            scale = 1.5; center(); 
-            const positions = [{s:1.2,x:0,y:0},{s:0.9,x:100,y:-50},{s:0.7,x:0,y:100},{s:0.5,x:0,y:0}]; 
-            let i = 0; 
+        function autoTour() {
+            scale = 1;
+            center();
+            const positions = [{s:0.9, x:50, y:-30}, {s:0.7, x:0, y:80}, {s:0.5, x:0, y:0}];
+            let i = 0;
             const step = () => { 
                 if (i < positions.length) { 
-                    const p = positions[i]; scale = p.s; tx = p.x + (viewport.clientWidth - 1200) / 2; ty = p.y + (viewport.clientHeight - 1200) / 2; 
-                    update(); i++; setTimeout(step, 1200); 
+                    scale = positions[i].s;
+                    tx = positions[i].x + (viewport.clientWidth - 2000 * scale) / 2;
+                    ty = positions[i].y + (viewport.clientHeight - 2000 * scale) / 2;
+                    update();
+                    i++;
+                    setTimeout(step, 1500);
                 }
-            }; 
-            step(); 
+            };
+            step();
         }
 
         let labelsOn = false;
-        function toggleLabels() { 
-            labelsOn = !labelsOn; 
-            document.querySelectorAll('.tile-label').forEach(l => l.style.opacity = labelsOn ? '1' : '');
-        }
-
-        // Search functionality
-        function searchTiles(query) {
-            const lowerQuery = query.toLowerCase().trim();
-            const allTiles = document.querySelectorAll('.orbit-tile, .center-tile');
-            
-            allTiles.forEach(tileEl => {
-                const name = tileEl.querySelector('.tile-label')?.textContent.toLowerCase() || '';
-                if (lowerQuery === '') {
-                    tileEl.style.opacity = '1';
-                    tileEl.style.filter = 'none';
-                } else if (name.includes(lowerQuery)) {
-                    tileEl.style.opacity = '1';
-                    tileEl.style.filter = 'drop-shadow(0 0 10px rgba(99, 102, 241, 0.8))';
-                } else {
-                    tileEl.style.opacity = '0.3';
-                    tileEl.style.filter = 'none';
-                }
-            });
+        function toggleLabels() {
+            labelsOn = !labelsOn;
+            document.querySelectorAll('.hex-label').forEach(l => l.style.opacity = labelsOn ? '1' : '');
         }
 
         // Initialize
-        createOrbitalLayout();
+        createHexLayout();
         center();
         const savedBg = localStorage.getItem('tilegrow-bg') || 'waves';
-        setBackground(savedBg);
-
-        setTimeout(() => { 
-            const hint = document.getElementById('record-hint'); 
-            hint.textContent = '👆 Double tap to zoom • Drag to explore'; 
-            hint.classList.add('show'); 
-            setTimeout(() => hint.classList.remove('show'), 4000); 
-        }, 2000);
+        if (savedBg === 'waves') drawWaves();
+        else if (savedBg === 'particles') drawParticles();
+        else if (savedBg === 'morphing') drawMorphing();
     </script>
 </body>
 </html>
