@@ -491,28 +491,28 @@
     </div>
 
     <script>
-        // Sample tile data
+        // Sample tile data - using actual files from tiles/
         const tiles = [
-            {id: 1, name: "TileGrow", type: "center", src: "tiles/tile_1.png"},
-            {id: 2, name: "Alex", type: "subscriber", src: "tiles/tile_2.png"},
-            {id: 3, name: "Maria", type: "subscriber", src: "tiles/tile_3.png"},
-            {id: 4, name: "John", type: "subscriber", src: "tiles/tile_4.png"},
-            {id: 5, name: "Sarah", type: "subscriber", src: "tiles/tile_5.png"},
-            {id: 6, name: "Mike", type: "subscriber", src: "tiles/tile_6.png"},
-            {id: 7, name: "Emma", type: "subscriber", src: "tiles/tile_7.png"},
-            {id: 8, name: "David", type: "subscriber", src: "tiles/tile_8.png"},
-            {id: 9, name: "Lisa", type: "subscriber", src: "tiles/tile_9.png"},
-            {id: 10, name: "Tom", type: "subscriber", src: "tiles/tile_10.png"},
-            {id: 11, name: "Anna", type: "subscriber", src: "tiles/tile_11.png"},
-            {id: 12, name: "Chris", type: "subscriber", src: "tiles/tile_12.png"},
-            {id: 13, name: "Kate", type: "subscriber", src: "tiles/tile_13.png"},
-            {id: 14, name: "James", type: "subscriber", src: "tiles/tile_14.png"},
-            {id: 15, name: "Nina", type: "subscriber", src: "tiles/tile_15.png"},
-            {id: 16, name: "Paul", type: "subscriber", src: "tiles/tile_16.png"},
-            {id: 17, name: "Lena", type: "subscriber", src: "tiles/tile_17.png"},
-            {id: 18, name: "Mark", type: "subscriber", src: "tiles/tile_18.png"},
-            {id: 19, name: "Olga", type: "subscriber", src: "tiles/tile_19.png"},
-            {id: 20, name: "Ivan", type: "subscriber", src: "tiles/tile_20.png"},
+            {id: 1, name: "TileGrow", type: "center", src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236366f1'/%3E%3Cstop offset='100%25' style='stop-color:%238b5cf6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23g)' width='200' height='200' rx='16'/%3E%3Ctext fill='white' x='100' y='95' text-anchor='middle' font-size='28' font-weight='bold' font-family='system-ui'%3ETile%3C/text%3E%3Ctext fill='white' x='100' y='125' text-anchor='middle' font-size='28' font-weight='bold' font-family='system-ui'%3EGrow%3C/text%3E%3C/svg%3E"},
+            {id: 2, name: "Abigail", type: "subscriber", src: "tiles/abigail.png"},
+            {id: 3, name: "Alex", type: "subscriber", src: "tiles/alex.png"},
+            {id: 4, name: "Amelia", type: "subscriber", src: "tiles/amelia.png"},
+            {id: 5, name: "Andrew", type: "subscriber", src: "tiles/andrew.png"},
+            {id: 6, name: "Anna", type: "subscriber", src: "tiles/anna.png"},
+            {id: 7, name: "Anthony", type: "subscriber", src: "tiles/anthony.png"},
+            {id: 8, name: "Ava", type: "subscriber", src: "tiles/ava.png"},
+            {id: 9, name: "Avery", type: "subscriber", src: "tiles/avery.png"},
+            {id: 10, name: "Brian", type: "subscriber", src: "tiles/brian.png"},
+            {id: 11, name: "Charles", type: "subscriber", src: "tiles/charles.png"},
+            {id: 12, name: "Charlotte", type: "subscriber", src: "tiles/charlotte.png"},
+            {id: 13, name: "Chloe", type: "subscriber", src: "tiles/chloe.png"},
+            {id: 14, name: "Daniel", type: "subscriber", src: "tiles/daniel.png"},
+            {id: 15, name: "David", type: "subscriber", src: "tiles/david.png"},
+            {id: 16, name: "Donald", type: "subscriber", src: "tiles/donald.png"},
+            {id: 17, name: "Edward", type: "subscriber", src: "tiles/edward.png"},
+            {id: 18, name: "Elizabeth", type: "subscriber", src: "tiles/elizabeth.png"},
+            {id: 19, name: "Ella", type: "subscriber", src: "tiles/ella.png"},
+            {id: 20, name: "Emily", type: "subscriber", src: "tiles/emily.png"},
         ];
 
         // Orbital Layout
@@ -525,7 +525,7 @@
             // Center tile
             centerTile.innerHTML = `
                 <div class="tile">
-                    <img src="${center.src}" alt="${center.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 180 180%22><rect fill=%22%236366f1%22 width=%22180%22 height=%22180%22/><text fill=%22white%22 x=%2290%22 y=%2295%22 text-anchor=%22middle%22 font-size=%2220%22>TileGrow</text></svg>'">
+                    <img src="${center.src}" alt="${center.name}">
                     <div class="tile-label">${center.name}</div>
                 </div>
             `;
@@ -552,7 +552,7 @@
                     tileEl.style.top = y + 'px';
                     tileEl.innerHTML = `
                         <div class="tile">
-                            <img src="${tile.src}" alt="${tile.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 140 140%22><rect fill=%22%238b5cf6%22 width=%22140%22 height=%22140%22/><text fill=%22white%22 x=%2270%22 y=%2275%22 text-anchor=%22middle%22 font-size=%2216%22>${tile.name}</text></svg>'">
+                            <img src="${tile.src}" alt="${tile.name}">
                             <div class="tile-label">${tile.name}</div>
                         </div>
                     `;
